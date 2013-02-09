@@ -39,6 +39,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Constraint\ConstraintDecision.cs" />
+    <Compile Include="Constraint\ConstraintPrediction.cs" />
+    <Compile Include="Constraint\ItemPairConstraint.cs" />
+    <Compile Include="Constraint\SingleItemConstraint.cs" />
+    <Compile Include="Constraint\UpdateableConstraint.cs" />
     <Compile Include="ItemToSchedule.cs" />
     <Compile Include="Lane.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
