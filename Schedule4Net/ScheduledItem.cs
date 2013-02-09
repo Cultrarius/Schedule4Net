@@ -8,7 +8,7 @@ namespace Schedule4Net
     /// </summary>
     /// <remarks>Objects of this class are immutable and can therefore not be modified after creation.</remarks>
     [Serializable]
-    class ScheduledItem : IComparable<ScheduledItem>
+    public class ScheduledItem : IComparable<ScheduledItem>
     {
         /// <summary>
         /// Gets the start time of the scheduled item

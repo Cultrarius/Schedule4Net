@@ -8,7 +8,7 @@ namespace Schedule4Net
     /// </summary>
     /// <seealso cref="ItemToSchedule"/>
     [Serializable]
-    class Lane
+    public class Lane
     {
         /// <summary>
         /// Returns the number of this lane. The number is a unique identifier used to distinguish different lanes.

@@ -14,7 +14,7 @@ namespace Schedule4Net
     /// </summary>
     /// <remarks>Objects of this class are immutable and can therefore not be modified after creation.</remarks>
     [Serializable]
-    internal class ItemToSchedule : IComparable<ItemToSchedule>
+    public class ItemToSchedule : IComparable<ItemToSchedule>
     {
         private readonly IDictionary<Lane, int> _durations;
         private readonly List<ItemToSchedule> _requiredItems;
