@@ -3,7 +3,8 @@
 namespace Schedule4Net
 {
     /// <summary>
-    /// This class is used by the scheduling algorithm to represent one executing unit for the scheduled items. This could for example be a processor that executes tasks or a roboter that executes movement-commands.
+    /// This class is used by the scheduling algorithm to represent one executing unit for the scheduled items.
+    /// This could, for example, be a processor that executes tasks or a roboter that executes movement-commands.
     /// </summary>
     /// <seealso cref="ItemToSchedule"/>
     class Lane

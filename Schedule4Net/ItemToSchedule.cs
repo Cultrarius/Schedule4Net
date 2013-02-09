@@ -11,9 +11,8 @@ namespace Schedule4Net
     /// 
     /// For every grouped entry, the item contains one duration that corresponds to the execution time of that item on the given lane.
     /// These duration may differ from each other, but they are always bigger than zero.
-    /// 
-    /// Objects of this class are immutable and can therefore not be modified after creation.
     /// </summary>
+    /// <remarks>Objects of this class are immutable and can therefore not be modified after creation.</remarks>
     internal class ItemToSchedule : IComparable<ItemToSchedule>
     {
         private readonly IDictionary<Lane, int> _durations;
@@ -112,7 +111,7 @@ namespace Schedule4Net
         /// <returns>The duration on the lane</returns>
         public int GetDuration(Lane lane)
         {
-            return Durations[lane];
+            return _durations[lane];
         }
 
         public override int GetHashCode()
