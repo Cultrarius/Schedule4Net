@@ -7,6 +7,8 @@ namespace Schedule4Net
     /// </summary>
     class ScheduleUtil
     {
+        private ScheduleUtil() { }
+
         /// <summary>
         /// Returns for two given items the value that states how much they overlap each other.
         /// </summary>
