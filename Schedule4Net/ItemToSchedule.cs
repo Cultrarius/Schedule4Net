@@ -3,6 +3,17 @@ using System.Collections.Generic;
 
 namespace Schedule4Net
 {
+    /// <summary>
+    /// This represents the entity that the scheduling algorithm has to create the schedule from.
+    /// This could be jobs on different machines or a shifts of different workers. Each item is present on one or more {@link Lane}.
+    /// So, one ItemToSchedule does not necessarily have to correspond to exactly one job or shift, but groups severeal of them together.
+    /// The point is that all of these grouped entries will be scheduled to have the same start time.
+    /// 
+    /// For every grouped entry, the item contains one duration that corresponds to the execution time of that item on the given lane.
+    /// These duration may differ from each other, but they are always bigger than zero.
+    /// 
+    /// Objects of this class are immutable and can therefore not be modified after creation.
+    /// </summary>
     internal class ItemToSchedule : IComparable<ItemToSchedule>
     {
         private readonly IDictionary<Lane, int> _durations;
