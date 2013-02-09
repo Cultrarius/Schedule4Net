@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace Schedule4Net
 {
-    public class Class1
+    class ItemToSchedule : IComparable 
     {
+        public int CompareTo(object obj)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
