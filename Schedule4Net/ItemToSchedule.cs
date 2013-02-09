@@ -13,6 +13,7 @@ namespace Schedule4Net
     /// These duration may differ from each other, but they are always bigger than zero.
     /// </summary>
     /// <remarks>Objects of this class are immutable and can therefore not be modified after creation.</remarks>
+    [Serializable]
     internal class ItemToSchedule : IComparable<ItemToSchedule>
     {
         private readonly IDictionary<Lane, int> _durations;

@@ -7,6 +7,7 @@ namespace Schedule4Net
     /// This class represents an <see cref="ItemToSchedule"/> that was scheduled to start at a specific point of time.
     /// </summary>
     /// <remarks>Objects of this class are immutable and can therefore not be modified after creation.</remarks>
+    [Serializable]
     class ScheduledItem : IComparable<ScheduledItem>
     {
         /// <summary>

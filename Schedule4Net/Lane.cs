@@ -7,6 +7,7 @@ namespace Schedule4Net
     /// This could, for example, be a processor that executes tasks or a roboter that executes movement-commands.
     /// </summary>
     /// <seealso cref="ItemToSchedule"/>
+    [Serializable]
     class Lane
     {
         /// <summary>
