@@ -20,6 +20,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -47,6 +49,12 @@
     <Compile Include="Constraint\ItemPairConstraint.cs" />
     <Compile Include="Constraint\SingleItemConstraint.cs" />
     <Compile Include="Constraint\UpdateableConstraint.cs" />
+    <Compile Include="Core\Exception\SchedulingException.cs" />
+    <Compile Include="Core\Exception\ViolatorUpdateInvalid.cs" />
+    <Compile Include="Core\ViolationsManager.cs" />
+    <Compile Include="Core\Violator.cs" />
+    <Compile Include="Core\ViolatorUpdate.cs" />
+    <Compile Include="Core\ViolatorValues.cs" />
     <Compile Include="ItemToSchedule.cs" />
     <Compile Include="Lane.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -54,9 +62,7 @@
     <Compile Include="SchedulePlan.cs" />
     <Compile Include="ScheduleUtil.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Core\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Schedule4Net
 {
-    class SchedulePlan : ICloneable
+    public class SchedulePlan : ICloneable
     {
         private readonly IDictionary<int, ScheduledItem> _scheduledItems;
         private readonly IDictionary<int, int> _startValues;
