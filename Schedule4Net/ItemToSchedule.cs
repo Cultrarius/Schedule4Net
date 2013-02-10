@@ -58,7 +58,7 @@ namespace Schedule4Net
         /// <value>
         /// The items required by this item
         /// </value>
-        public List<ItemToSchedule> RequiredItems
+        public IList<ItemToSchedule> RequiredItems
         {
             get { return new List<ItemToSchedule>(_requiredItems); }
         }
