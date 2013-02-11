@@ -53,7 +53,7 @@ namespace Schedule4Net.Core
         {
             foreach (ViolationsManager.ConstraintPartner partner in partners)
             {
-                ViolatorValues partnerValues = partner.ViolationsContainer.values;
+                ViolatorValues partnerValues = partner.ViolationsContainer.Values;
                 HardViolationsValue += partnerValues.HardViolationsValue;
                 SoftViolationsValue += partnerValues.SoftViolationsValue;
             }
@@ -61,7 +61,7 @@ namespace Schedule4Net.Core
 
         private void CheckSingleConstraints()
         {
-            foreach (SingleItemConstraint constraint in Manager.SingleConstraints)
+            foreach (SingleItemConstraint constraint in Manager._singleConstraints)
             {
                 Aggregate(constraint.Check(ScheduledItem));
             }
