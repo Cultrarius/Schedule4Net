@@ -49,6 +49,7 @@
     <Compile Include="Constraint\ItemPairConstraint.cs" />
     <Compile Include="Constraint\SingleItemConstraint.cs" />
     <Compile Include="Constraint\UpdateableConstraint.cs" />
+    <Compile Include="Core\ConfigurationsManager.cs" />
     <Compile Include="Core\Exception\SchedulingException.cs" />
     <Compile Include="Core\Exception\ViolatorUpdateInvalid.cs" />
     <Compile Include="Core\ViolationsManager.cs" />
