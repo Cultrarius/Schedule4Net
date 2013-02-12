@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 
-namespace Schedule4Net
+namespace Schedule4Net.Core
 {
     /// <summary>
     /// This utility-class provides some static methods that are used by various parts of the scheduling algorithm.
     /// </summary>
-    class ScheduleUtil
+    internal class ScheduleUtil
     {
         private ScheduleUtil() { }
 

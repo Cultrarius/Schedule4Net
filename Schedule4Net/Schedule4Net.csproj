@@ -52,6 +52,7 @@
     <Compile Include="Core\ConfigurationsManager.cs" />
     <Compile Include="Core\Exception\SchedulingException.cs" />
     <Compile Include="Core\Exception\ViolatorUpdateInvalid.cs" />
+    <Compile Include="Core\ScheduleUtil.cs" />
     <Compile Include="Core\ViolationsManager.cs" />
     <Compile Include="Core\Violator.cs" />
     <Compile Include="Core\ViolatorUpdate.cs" />
@@ -62,7 +63,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScheduledItem.cs" />
     <Compile Include="SchedulePlan.cs" />
-    <Compile Include="ScheduleUtil.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
