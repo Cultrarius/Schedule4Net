@@ -4,7 +4,7 @@ using Schedule4Net.Constraint;
 
 namespace Schedule4Net.Core
 {
-    public class Violator : IComparable<Violator>
+    internal class Violator : IComparable<Violator>
     {
         public int HardViolationsValue { get; set; }
         public int SoftViolationsValue { get; set; }

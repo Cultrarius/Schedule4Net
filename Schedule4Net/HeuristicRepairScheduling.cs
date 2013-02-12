@@ -42,7 +42,7 @@ namespace Schedule4Net
         /// Creates a new instance of the scheduler using the constraints of the given <see cref="ViolationsManager"/>.
         /// </summary>
         /// <param name="manager">The manager holding the constraints used to create all future schedules.</param>
-        public HeuristicRepairScheduling(ViolationsManager manager)
+        internal HeuristicRepairScheduling(ViolationsManager manager)
         {
             CachingResultPlan = true;
             _violationsManager = manager;

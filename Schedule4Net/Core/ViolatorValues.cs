@@ -1,6 +1,6 @@
 ﻿namespace Schedule4Net.Core
 {
-    public class ViolatorValues
+    internal class ViolatorValues
     {
         public ViolatorValues()
         {

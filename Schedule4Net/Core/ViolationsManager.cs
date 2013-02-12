@@ -11,7 +11,7 @@ namespace Schedule4Net.Core
     /// This class is responsible for the management of all constraints and their violations by scheduled items.
     /// It tries to manage constraint violations in an efficient way and also handles updates of the <see cref="SchedulePlan"/>.
     /// </summary>
-    public class ViolationsManager
+    internal class ViolationsManager
     {
         public List<SingleItemConstraint> SingleConstraints
         {

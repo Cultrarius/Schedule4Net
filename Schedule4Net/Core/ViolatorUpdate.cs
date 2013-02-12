@@ -2,7 +2,7 @@
 
 namespace Schedule4Net.Core
 {
-    public class ViolatorUpdate
+    internal class ViolatorUpdate
     {
         public Violator UpdatedViolator { get; private set; }
         public IList<ViolationsManager.PartnerUpdate> PartnerUpdates { get; private set; }
