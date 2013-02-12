@@ -36,9 +36,6 @@ namespace Schedule4Net.Core
         /// It is similar to an ordered list, but it guarantees that an item can be contained at most once.
         /// In addition, it provides efficient log(n) operations to add and remove items.
         /// </summary>
-        /// <value>
-        /// The violations tree.
-        /// </value>
         protected TreeSet<Violator> ViolationsTree
         {
             get { return _violationsTree; }
