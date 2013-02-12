@@ -7,13 +7,30 @@ using Schedule4Net.Core.Exception;
 
 namespace Schedule4Net
 {
+    /// <summary>
+    /// This class implements a scheduling algorithm to quickly solve a constrained scheduling problem.
+    /// This does so by using a heuristic approach as described in the following paper: <a href="http://cds.cern.ch/record/1463647">cds.cern.ch</a>
+    /// Basically, it tries to move the scheduled objects around until all the constraints are fulfilled.
+    /// It is not guaranteed to find a solution if one exists, nor is it guaranteed to do so fast.
+    /// But for most cases, this algorithm performs a lot better than classical search algorithms.
+    /// </summary>
     public class HeuristicRepairScheduling
     {
         private SchedulePlan _plan;
         private readonly ViolationsManager _violationsManager;
         private readonly ConfigurationsManager _configurationsManager;
         private readonly List<IList<ScheduledItem>> _snapshots;
-        public bool CachingResultPlan { get; private set; }
+
+        /// <summary>
+        /// After each successful movement operation the scheduler will take a snapshot of the current configuration of all the scheduled items.
+        /// This property contains a list of these snapshots in a chronological order. This is very helpful for debugging and to visualize the workings of the scheduler.
+        /// </summary>
+        public List<IList<ScheduledItem>> Snapshots { get {return new List<IList<ScheduledItem>>(_snapshots); } }
+        
+        /// <summary>
+        /// Is true if the scheduler reuses the previous result to start the calculations with, false otherwise
+        /// </summary>
+        public bool CachingResultPlan { get; set; }
         
         /// <summary>
         /// the number of backsteps the scheduler had to take while trying to solve the scheduling problem.
@@ -21,12 +38,10 @@ namespace Schedule4Net
         /// </summary>
         public int Backsteps { get; set; }
 
-        /**
-         * Creates a new instance of the scheduler using the constraints of the given {@link ViolationsManager}.
-         * 
-         * @param manager
-         *            the manager holding the constraints used to create all future schedules
-         */
+        /// <summary>
+        /// Creates a new instance of the scheduler using the constraints of the given <see cref="ViolationsManager"/>.
+        /// </summary>
+        /// <param name="manager">The manager holding the constraints used to create all future schedules.</param>
         public HeuristicRepairScheduling(ViolationsManager manager)
         {
             CachingResultPlan = true;
@@ -35,43 +50,34 @@ namespace Schedule4Net
             _snapshots = new List<IList<ScheduledItem>>();
         }
 
-        /**
-         * Creates a new instance of the scheduler using the given constraints to schedule items.
-         * 
-         * @param singleConstraints
-         *            all the constraints that apply to single items
-         * @param pairConstraints
-         *            all the constraints that apply to a pair of items
-         */
+        /// <summary>
+        /// Creates a new instance of the scheduler using the given constraints to schedule items.
+        /// </summary>
+        /// <param name="singleConstraints">All the constraints that apply to single items.</param>
+        /// <param name="pairConstraints">All the constraints that apply to a pair of items.</param>
         public HeuristicRepairScheduling(IEnumerable<SingleItemConstraint> singleConstraints, IEnumerable<ItemPairConstraint> pairConstraints)
             : this(new ViolationsManager(singleConstraints, pairConstraints))
         {
         }
         
 
-        /**
-         * The main entry point for scheduling. This method will move all items provided as parameters as it sees fit. If some of the items must
-         * be fixed and should not be moved then provide them as an additional collection.
-         * 
-         * @param itemsToSchedule
-         *            all the items that shall be scheduled. These do not contain the fixed scheduled items.
-         * @return
-         */
+        /// <summary>
+        /// The main entry point for scheduling. This method will move all items provided as parameters as it sees fit to create a schedule.
+        /// If some of the items must be fixed and should not be moved then provide them as an additional collection.
+        /// </summary>
+        /// <param name="itemsToSchedule">All the items that shall be scheduled. These do not contain the fixed scheduled items.</param>
+        /// <returns>The plan created by scheduling the given items</returns>
         public SchedulePlan Schedule(IList<ItemToSchedule> itemsToSchedule)
         {
             return Schedule(itemsToSchedule, new List<ScheduledItem>());
         }
 
-        /**
-         * The main entry point for scheduling.
-         * 
-         * @param itemsToSchedule
-         *            all the items that shall be scheduled. These do not contain the fixed scheduled items.
-         * @param fixedItems
-         *            the items in the scheduling plan, that must not be moved by the scheduler. For example, this might be tasks that have
-         *            already been started but must be reflected in the schedule.
-         * @return the plan created by scheduling the given items by using the constraints from the {@link ViolationsManager}.
-         */
+        /// <summary>
+        /// The main entry point for scheduling. This method will move the items provided as parameters as it sees fit to create a schedule.
+        /// </summary>
+        /// <param name="itemsToSchedule">All the items that shall be scheduled. These do not contain the fixed scheduled items.</param>
+        /// <param name="fixedItems">The items in the scheduling plan, that must not be moved by the scheduler. For example, this might be tasks that have already been started but must be reflected in the schedule.</param>
+        /// <returns>The plan created by scheduling the given items</returns>
         public SchedulePlan Schedule(IList<ItemToSchedule> itemsToSchedule, IList<ScheduledItem> fixedItems)
         {
             Backsteps = 0;
@@ -83,10 +89,9 @@ namespace Schedule4Net
             return _plan;
         }
 
-        /**
-         * This method is more or less the "core" of the scheduler. It moves the items violating one or more constraints around until all
-         * constraints are satisfied.
-         */
+        /// <summary>
+        /// This method is more or less the "core" of the scheduler. It moves the items violating one or more constraints around until all constraints are satisfied.
+        /// </summary>
         private void SatisfyConstraints()
         {
             bool hardConstraintsSatisfied = false;
@@ -159,10 +164,11 @@ namespace Schedule4Net
             }
         }
 
-        /**
-         * This method is called if the scheduler has at least one hard constraint violated, but cannot find any possible move to improve the
-         * situation. Most of the time this is a local optimum created by a chain of dependent items that are scheduled in the wrong order.
-         */
+        /// <summary>
+        /// This method is called if the scheduler has at least one hard constraint violated, but cannot find any possible move to improve the situation.
+        /// Most of the time this is a local optimum created by a chain of dependent items that are scheduled in the wrong order.
+        /// </summary>
+        /// <exception cref="SchedulingException">If unable to esacape from a local optimum.</exception>
         private void EscapeFromLocalOptimum()
         {
             Violator violator = _violationsManager.GetBiggestViolator(null);
@@ -198,7 +204,7 @@ namespace Schedule4Net
             SchedulePlan newPlan = _plan.Clone() as SchedulePlan;
             if (newPlan == null) { throw new SchedulingException("Unable to copy schedule plan!"); }
             IDictionary<ItemToSchedule, DependencyNode> dependencyLevels = new Dictionary<ItemToSchedule, DependencyNode>();
-            addToTree(violator.ScheduledItem.ItemToSchedule, dependencyLevels, newPlan, 0);
+            AddToTree(violator.ScheduledItem.ItemToSchedule, dependencyLevels, newPlan, 0);
 
             C5.TreeSet<DependencyNode> dependencyTree = new C5.TreeSet<DependencyNode>();
             dependencyTree.AddAll(dependencyLevels.Values);
@@ -230,7 +236,7 @@ namespace Schedule4Net
             _configurationsManager.AddPlanConfiguration(newPlan);
         }
 
-        private void addToTree(ItemToSchedule item, IDictionary<ItemToSchedule, DependencyNode> dependencyLevels, SchedulePlan newPlan, int level)
+        private static void AddToTree(ItemToSchedule item, IDictionary<ItemToSchedule, DependencyNode> dependencyLevels, SchedulePlan newPlan, int level)
         {
             DependencyNode node;
             if (dependencyLevels.ContainsKey(item))
@@ -247,17 +253,14 @@ namespace Schedule4Net
             {
                 if (newPlan.CanBeMoved(scheduled))
                 {
-                    addToTree(scheduled.ItemToSchedule, dependencyLevels, newPlan, level + 1);
+                    AddToTree(scheduled.ItemToSchedule, dependencyLevels, newPlan, level + 1);
                 }
             }
         }
 
-        /**
-         * This class is used to build the tree when trying to escape a local optimum.
-         * 
-         * @author Michael
-         * 
-         */
+        /// <summary>
+        /// This class is used to build the tree when trying to escape a local optimum.
+        /// </summary>
         private class DependencyNode : IComparable<DependencyNode>
         {
             internal ScheduledItem ScheduledItem { get; private set; }
@@ -377,21 +380,17 @@ namespace Schedule4Net
             }
         }
 
-        /**
-         * Creates the start plan for the scheduler. This is a very important step, because the better the start plan, the faster will the
-         * scheduling algorithm solve it. However, creating a good start plan is almost as hard as scheduling all of the items altogether.
-         * 
-         * @param itemsToSchedule
-         *            all of the items that need to be scheduled and should be aligned by this method
-         * @param fixedItems
-         *            these items must be included in the plan, but must not be moved as they already have a fixed place
-         */
+        /// <summary>
+        /// Creates the start plan for the scheduler. This is a very important step, because the better the start plan, the faster will the scheduling algorithm solve it.
+        /// However, creating a good start plan is almost as hard as scheduling all of the items altogether.
+        /// </summary>
+        /// <param name="itemsToSchedule">All of the items that need to be scheduled and should be aligned by this method.</param>
+        /// <param name="fixedItems">These items must be included in the plan, but must not be moved as they already have a fixed place.</param>
         private void CreateStartPlan(IList<ItemToSchedule> itemsToSchedule, IList<ScheduledItem> fixedItems)
         {
             SchedulePlan oldPlan = CachingResultPlan ? _plan : null;
             _plan = new SchedulePlan();
 
-            // @formatter:off
             /*
              * possibilities:
              * - place them all at 0 (all overlapping) 
@@ -400,7 +399,6 @@ namespace Schedule4Net
              * - as before, but inverse (small to big) 
              * - shuffle them and place them to the current possible end
              */
-            // @formatter:on
 
             foreach (ScheduledItem fixedItem in fixedItems)
             {
@@ -428,7 +426,7 @@ namespace Schedule4Net
                     if (oldItem.Equals(newItem))
                     {
                         ScheduledItem scheduledItem = _plan.Add(newItem, oldScheduledItem.Start);
-                        updateMaxLaneValues(maximumValues, scheduledItem);
+                        UpdateMaxLaneValues(maximumValues, scheduledItem);
                         scheduledFromOldPlan.Add(newItem);
                     }
                 }
@@ -440,16 +438,16 @@ namespace Schedule4Net
                 {
                     continue;
                 }
-                int start = getPossibleStart(maximumValues, itemToSchedule);
+                int start = GetPossibleStart(maximumValues, itemToSchedule);
                 ScheduledItem scheduledItem = _plan.Add(itemToSchedule, start);
-                updateMaxLaneValues(maximumValues, scheduledItem);
+                UpdateMaxLaneValues(maximumValues, scheduledItem);
             }
 
             // take a snapshot
             _snapshots.Add(_plan.ScheduledItems);
         }
 
-        private void updateMaxLaneValues(IDictionary<Lane, int> maximumValues, ScheduledItem scheduledItem)
+        private static void UpdateMaxLaneValues(IDictionary<Lane, int> maximumValues, ScheduledItem scheduledItem)
         {
             foreach (Lane lane in scheduledItem.ItemToSchedule.Lanes)
             {
@@ -457,7 +455,7 @@ namespace Schedule4Net
             }
         }
 
-        private int getPossibleStart(IDictionary<Lane, int> maximumValues, ItemToSchedule itemToSchedule)
+        private static int GetPossibleStart(IDictionary<Lane, int> maximumValues, ItemToSchedule itemToSchedule)
         {
             int start = 0;
             foreach (Lane lane in itemToSchedule.Lanes)
@@ -472,52 +470,10 @@ namespace Schedule4Net
             return start;
         }
 
-        /**
-         * After each successful movement operation the scheduler will take a snapshot of the current configuration of all the scheduled items.
-         * This method returns a list of these snapshots in a chronological order. This is very helpful for debugging and to visualize the
-         * workings of the scheduler.
-         * 
-         * @return a list of all the snapshots taken during the scheduling process
-         */
-        public IList<IList<ScheduledItem>> GetSnapshots()
-        {
-            return new List<IList<ScheduledItem>>(_snapshots);
-        }
-
-        /**
-         * @return the number of backsteps the scheduler had to take while trying to solve the scheduling problem. This method is only
-         *         interesting for debug reasons, so do not bother with it.
-         */
-        //public int getBacksteps()
-        //{
-        //    return Backsteps;
-        //}
-
-        /**
-         * @return <code>true</code> if the scheduler reuses the previous result to start the calculations with, <code>false</code> otherwise
-         */
-        //public bool isCachingResultPlan()
-        //{
-        //    return CachingResultPlan;
-        //}
-
-        /**
-         * This method controls if the scheduler should cache each result to determine the starting plan of the next scheduling run. By default,
-         * this value is set to true. If each scheduling run contains vastly different items to schedule then this should be set to false.
-         * 
-         * @param cachingResultPlan
-         *            <code>true</code> if the scheduler should reuse the previous result to start the calculations with, <code>false</code>
-         *            otherwise
-         */
-        //public void setCachingResultPlan(bool cachingResultPlan)
-        //{
-        //    this.CachingResultPlan = cachingResultPlan;
-        //}
-
-        /**
-         * This method clears the cached result plan so the next scheduling run will not be based on it. Please note that caching can be
-         * disabled altogether with the {@code setCachingResultPlan} method.
-         */
+        /// <summary>
+        /// This method clears the cached result plan so the next scheduling run will not be based on it.
+        /// Please note that caching can be disabled altogether by setting the <see cref="CachingResultPlan"/> property to false.
+        /// </summary>
         public void ClearCachedResultPlan()
         {
             _plan = null;

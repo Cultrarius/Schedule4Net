@@ -159,7 +159,7 @@ namespace Schedule4Net.Core
         }
 
         /// <summary>
-        /// This method checks if the item provided with <code>newItem</code> can be rescheduled in the <see cref="SchedulePlan"/> <code>plan</code>.
+        /// This method checks if the provided item can be rescheduled in the provided <see cref="SchedulePlan"/>.
         /// This method is merely checking if such a rescheduling would be possible and what it would mean for the constriant violation values of the involved items.
         /// This method does not automatically reschedule the item if it is possible to do so.
         /// It returns an items that contains all information necessary to efficiently reschedule the item and update all constraint ciolations accordingly.
@@ -388,12 +388,12 @@ namespace Schedule4Net.Core
         }
 
         /// <summary>
-        /// Returns the <see cref="Violator"/> with the biggest constraint violation value that is smaller than the value of <code>upperBound</code>.
-        /// If <code>upperBound</code> is null then the biggest possible violator is returned.
-        /// If there is no violator available then <code>null</code> is returned.
+        /// Returns the <see cref="Violator"/> with the biggest constraint violation value that is smaller than the value of upperBound.
+        /// If upperBound is null then the biggest possible violator is returned.
+        /// If there is no violator available then null is returned.
         /// </summary>
-        /// <param name="upperBound">If <code>null</code> then the biggest possible violator is returned, otherwise a violator with a value smaller than <code>upperBound</code> is returned.</param>
-        /// <returns>The biggest possible violator or <code>null</code> if there is none.</returns>
+        /// <param name="upperBound">If null then the biggest possible violator is returned, otherwise a violator with a value smaller than upperBound is returned.</param>
+        /// <returns>The biggest possible violator or null if there is none.</returns>
         /// <remarks>This method is guaranteed to run in O(log(n)).</remarks>
         public Violator GetBiggestViolator(Violator upperBound)
         {
