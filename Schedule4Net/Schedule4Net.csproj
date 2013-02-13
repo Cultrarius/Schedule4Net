@@ -49,6 +49,7 @@
     <Compile Include="Constraint\Impl\DebugTestConstraint.cs" />
     <Compile Include="Constraint\Impl\DependenciesConstraint.cs" />
     <Compile Include="Constraint\Impl\NoOverlappingConstraint.cs" />
+    <Compile Include="Constraint\Impl\StartNowConstraint.cs" />
     <Compile Include="Constraint\ItemPairConstraint.cs" />
     <Compile Include="Constraint\SingleItemConstraint.cs" />
     <Compile Include="Constraint\UpdateableConstraint.cs" />
