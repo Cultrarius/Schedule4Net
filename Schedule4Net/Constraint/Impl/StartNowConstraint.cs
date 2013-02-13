@@ -1,6 +1,6 @@
 ﻿namespace Schedule4Net.Constraint.Impl
 {
-    class StartNowConstraint : SingleItemConstraint
+    public class StartNowConstraint : SingleItemConstraint
     {
         public ConstraintDecision Check(ScheduledItem item)
         {

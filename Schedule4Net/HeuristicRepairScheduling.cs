@@ -361,23 +361,21 @@ namespace Schedule4Net
             {
                 newViolatedItems.Remove(toRemove);
             }
-            if (newViolatedItems.Count != 0)
+            if (newViolatedItems.Count == 0) return;
+
+            // check if one of the newly violated items has already been shifted before and is locked now
+            ISet<ScheduledItem> checkCollection = new HashSet<ScheduledItem>(newViolatedItems);
+            checkCollection.IntersectWith(lockedItems);
+            if (checkCollection.Count != 0)
             {
-
-                // check if one of the newly violated items has already been shifted before and is locked now
-                ISet<ScheduledItem> checkCollection = new HashSet<ScheduledItem>(newViolatedItems);
-                checkCollection.IntersectWith(lockedItems);
-                if (checkCollection.Count != 0)
-                {
-                    throw new SchedulingException(
-                        "The current plan can not be scheduled because it most likely contains a circular constraint of some kind. Dumping variable assignments. "
-                        + "lockedItems: " + lockedItems + ", newViolatedItems: " + newViolatedItems + ", toEndPlan: " + toEndPlan
-                        + ", original plan: " + _plan);
-                }
-
-                // recursively shift the new violated items and lock them
-                ShiftAndLock(newViolatedItems, lockedItems, toEndPlan, shiftValue);
+                throw new SchedulingException(
+                    "The current plan can not be scheduled because it most likely contains a circular constraint of some kind. Dumping variable assignments. "
+                    + "lockedItems: " + lockedItems + ", newViolatedItems: " + newViolatedItems + ", toEndPlan: " + toEndPlan
+                    + ", original plan: " + _plan);
             }
+
+            // recursively shift the new violated items and lock them
+            ShiftAndLock(newViolatedItems, lockedItems, toEndPlan, shiftValue);
         }
 
         /// <summary>
@@ -423,12 +421,10 @@ namespace Schedule4Net
                 {
                     ItemToSchedule oldItem = oldScheduledItem.ItemToSchedule;
                     ItemToSchedule newItem = newItemsMap[oldItem.Id];
-                    if (oldItem.Equals(newItem))
-                    {
-                        ScheduledItem scheduledItem = _plan.Add(newItem, oldScheduledItem.Start);
-                        UpdateMaxLaneValues(maximumValues, scheduledItem);
-                        scheduledFromOldPlan.Add(newItem);
-                    }
+                    if (!oldItem.Equals(newItem)) continue;
+                    ScheduledItem scheduledItem = _plan.Add(newItem, oldScheduledItem.Start);
+                    UpdateMaxLaneValues(maximumValues, scheduledItem);
+                    scheduledFromOldPlan.Add(newItem);
                 }
             }
 

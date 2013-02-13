@@ -4,7 +4,7 @@ using Schedule4Net.Core;
 
 namespace Schedule4Net.Constraint.Impl
 {
-    class NoOverlappingConstraint : ItemPairConstraint
+    public class NoOverlappingConstraint : ItemPairConstraint
     {
         public ConstraintDecision Check(ScheduledItem item1, ScheduledItem item2)
         {
@@ -15,11 +15,9 @@ namespace Schedule4Net.Constraint.Impl
             foreach (Lane lane in lanes)
             {
                 int overlapping = ScheduleUtil.GetOverlappingValue(item1.Start, item1.GetEnd(lane), item2.Start, item2.GetEnd(lane));
-                if (overlapping > 0)
-                {
-                    isFulfilled = false;
-                    overlappedValue += overlapping;
-                }
+                if (overlapping <= 0) continue;
+                isFulfilled = false;
+                overlappedValue += overlapping;
             }
             return new ConstraintDecision(true, isFulfilled, overlappedValue);
         }

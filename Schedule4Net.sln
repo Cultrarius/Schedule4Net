@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Schedule4Net", "Schedule4Net\Schedule4Net.csproj", "{D96EC610-C70A-4985-B966-04F0F2EF5B63}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Schedule4NetTest", "Schedule4NetTest\Schedule4NetTest.csproj", "{7B84D3BD-279A-4E73-88B1-44B3E5DFD37B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{D96EC610-C70A-4985-B966-04F0F2EF5B63}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D96EC610-C70A-4985-B966-04F0F2EF5B63}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D96EC610-C70A-4985-B966-04F0F2EF5B63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B84D3BD-279A-4E73-88B1-44B3E5DFD37B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B84D3BD-279A-4E73-88B1-44B3E5DFD37B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B84D3BD-279A-4E73-88B1-44B3E5DFD37B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B84D3BD-279A-4E73-88B1-44B3E5DFD37B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

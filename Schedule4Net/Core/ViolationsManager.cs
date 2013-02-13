@@ -458,16 +458,14 @@ namespace Schedule4Net.Core
                 Values.SoftViolationsValue = 0;
                 foreach (ConstraintDecision decision in violations)
                 {
-                    if (!decision.Fulfilled)
+                    if (decision.Fulfilled) continue;
+                    if (decision.HardConstraint)
                     {
-                        if (decision.HardConstraint)
-                        {
-                            Values.HardViolationsValue += decision.ViolationValue;
-                        }
-                        else
-                        {
-                            Values.SoftViolationsValue += decision.ViolationValue;
-                        }
+                        Values.HardViolationsValue += decision.ViolationValue;
+                    }
+                    else
+                    {
+                        Values.SoftViolationsValue += decision.ViolationValue;
                     }
                 }
             }
@@ -501,16 +499,14 @@ namespace Schedule4Net.Core
                     foreach (ItemPairConstraint constraint in partner.Constraints)
                     {
                         ConstraintDecision decision = constraint.Check(itemToCheck, partnerItem);
-                        if (!decision.Fulfilled)
+                        if (decision.Fulfilled) continue;
+                        if (decision.HardConstraint)
                         {
-                            if (decision.HardConstraint)
-                            {
-                                planValues.HardViolationsValue += decision.ViolationValue;
-                            }
-                            else
-                            {
-                                planValues.SoftViolationsValue += decision.ViolationValue;
-                            }
+                            planValues.HardViolationsValue += decision.ViolationValue;
+                        }
+                        else
+                        {
+                            planValues.SoftViolationsValue += decision.ViolationValue;
                         }
                     }
                 }
@@ -526,16 +522,14 @@ namespace Schedule4Net.Core
             foreach (SingleItemConstraint constraint in _singleConstraints)
             {
                 ConstraintDecision decision = constraint.Check(itemToCheck);
-                if (!decision.Fulfilled)
+                if (decision.Fulfilled) continue;
+                if (decision.HardConstraint)
                 {
-                    if (decision.HardConstraint)
-                    {
-                        values.HardViolationsValue += decision.ViolationValue;
-                    }
-                    else
-                    {
-                        values.SoftViolationsValue += decision.ViolationValue;
-                    }
+                    values.HardViolationsValue += decision.ViolationValue;
+                }
+                else
+                {
+                    values.SoftViolationsValue += decision.ViolationValue;
                 }
             }
 
@@ -551,16 +545,14 @@ namespace Schedule4Net.Core
                 foreach (ItemPairConstraint constraint in partner.Constraints)
                 {
                     ConstraintDecision decision = constraint.Check(itemToCheck, partnerItem);
-                    if (!decision.Fulfilled)
+                    if (decision.Fulfilled) continue;
+                    if (decision.HardConstraint)
                     {
-                        if (decision.HardConstraint)
-                        {
-                            values.HardViolationsValue += decision.ViolationValue;
-                        }
-                        else
-                        {
-                            values.SoftViolationsValue += decision.ViolationValue;
-                        }
+                        values.HardViolationsValue += decision.ViolationValue;
+                    }
+                    else
+                    {
+                        values.SoftViolationsValue += decision.ViolationValue;
                     }
                 }
             }

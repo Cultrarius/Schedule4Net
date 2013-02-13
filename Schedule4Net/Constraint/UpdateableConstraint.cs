@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Schedule4Net.Constraint
+﻿namespace Schedule4Net.Constraint
 {
     /// <summary>
     /// All constraints implementing this interface have the chance to update themselves before every scheduling run.
