@@ -65,7 +65,7 @@ namespace Schedule4Net
 
             foreach (ItemToSchedule required in itemToSchedule.RequiredItems)
             {
-                var items = _dependentItems[required] ?? new HashSet<ItemToSchedule>();
+                var items = _dependentItems.ContainsKey(required) ? _dependentItems[required] : new HashSet<ItemToSchedule>();
                 items.Add(itemToSchedule);
                 _dependentItems.Add(required, items);
             }
@@ -99,12 +99,14 @@ namespace Schedule4Net
         {
             int start = itemToAdd.Start;
             int count = _startValues.ContainsKey(start) ? _startValues[start] + 1 : 1;
+            _startValues.Remove(start);
             _startValues.Add(start, count);
 
             foreach (Lane lane in itemToAdd.ItemToSchedule.Lanes)
             {
                 int end = itemToAdd.GetEnd(lane);
                 count = _startValues.ContainsKey(end) ? _startValues[end] + 1 : 1;
+                _startValues.Remove(end);
                 _startValues.Add(end, count);
             }
         }
@@ -130,11 +132,8 @@ namespace Schedule4Net
                 throw new ArgumentException("The plan contains 0 entries for this scheduled item (start value error): " + item);
             }
             count--;
-            if (count == 0)
-            {
-                _startValues.Remove(startValue);
-            }
-            else
+            _startValues.Remove(startValue);
+            if (count != 0)
             {
                 _startValues.Add(startValue, count);
             }
@@ -164,7 +163,7 @@ namespace Schedule4Net
             RemoveFromStartValues(oldItem);
             AddToStartValues(newItem);
 
-            // update item IEnumerable
+            _scheduledItems.Remove(itemId);
             _scheduledItems.Add(itemId, newItem);
 
             UpdateMakespan();
@@ -233,7 +232,7 @@ namespace Schedule4Net
 
         public ScheduledItem GetScheduledItem(ItemToSchedule item)
         {
-            return _scheduledItems[item.Id];
+            return _scheduledItems.ContainsKey(item.Id) ? _scheduledItems[item.Id] : null;
         }
 
         public void Unschedule(ScheduledItem scheduledItem)

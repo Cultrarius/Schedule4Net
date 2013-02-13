@@ -126,5 +126,63 @@ namespace Schedule4NetTest
             Assert.AreEqual(42, result.Makespan);
             Assert.IsTrue(AllConstraintsSatisfied(result));
         }
+
+        [TestMethod]
+        public void TestScheduleLocalOptimum2() {
+        // A very simple local optimum that can be escaped by using the dependencies
+        List<ScheduledItem> fixedItems = new List<ScheduledItem>();
+        List<ItemToSchedule> items = new List<ItemToSchedule>();
+
+        Dictionary<Lane, int> durations = new Dictionary<Lane, int>();
+        Lane lane0 = new Lane(0);
+        Lane lane1 = new Lane(1);
+
+        // Test 1
+        durations.Clear();
+        durations.Add(lane0, 200);
+        ItemToSchedule unit1 = new ItemToSchedule(1, durations, new List<ItemToSchedule>());
+        items.Add(unit1);
+
+        // Test 2
+        durations.Clear();
+        durations.Add(lane1, 200);
+        ItemToSchedule unit2 = new ItemToSchedule(2, durations, new List<ItemToSchedule>());
+        items.Add(unit2);
+
+        // Test 13 (req. Test 1)
+        durations.Clear();
+        durations.Add(lane0, 200);
+        ICollection<ItemToSchedule> required = new List<ItemToSchedule>();
+        required.Add(unit1);
+        ItemToSchedule unit13 = new ItemToSchedule(13, durations, required);
+        items.Add(unit13);
+
+        // Test 23 (req. Test 2)
+        durations.Clear();
+        durations.Add(lane1, 200);
+        required = new List<ItemToSchedule> {unit2};
+            ItemToSchedule unit23 = new ItemToSchedule(23, durations, required);
+        items.Add(unit23);
+
+        // Test 4 (req. Test 13)
+        durations.Clear();
+        durations.Add(lane0, 200);
+        required = new List<ItemToSchedule> {unit13};
+            ItemToSchedule unit4 = new ItemToSchedule(4, durations, required);
+        items.Add(unit4);
+
+        // Test 5 (req. Test 23)
+        durations.Clear();
+        durations.Add(lane1, 200);
+        required = new List<ItemToSchedule> {unit23};
+            ItemToSchedule unit5 = new ItemToSchedule(5, durations, required);
+        items.Add(unit5);
+
+        SchedulePlan result = scheduling.Schedule(items, fixedItems);
+
+        Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
+        Assert.AreEqual(800, result.Makespan);
+        Assert.IsTrue(AllConstraintsSatisfied(result));
+    }
     }
 }

@@ -239,7 +239,7 @@ namespace Schedule4Net
         private static void AddToTree(ItemToSchedule item, IDictionary<ItemToSchedule, DependencyNode> dependencyLevels, SchedulePlan newPlan, int level)
         {
             DependencyNode node;
-            if (dependencyLevels.ContainsKey(item))
+            if (!dependencyLevels.ContainsKey(item))
             {
                 node = new DependencyNode(newPlan.GetScheduledItem(item), level);
                 dependencyLevels.Add(item, node);
@@ -447,6 +447,7 @@ namespace Schedule4Net
         {
             foreach (Lane lane in scheduledItem.ItemToSchedule.Lanes)
             {
+                maximumValues.Remove(lane);
                 maximumValues.Add(lane, scheduledItem.Start + scheduledItem.ItemToSchedule.GetDuration(lane));
             }
         }

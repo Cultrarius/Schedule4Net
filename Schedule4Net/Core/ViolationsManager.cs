@@ -115,12 +115,13 @@ namespace Schedule4Net.Core
                 }
 
                 Violator violator = new Violator(item, this);
-                ViolationsTree.Add(violator);
-                ViolationsMapping.Add(itemToSchedule, violator);
+                _violationsTree.Add(violator);
+                _violationsMapping.Remove(itemToSchedule);
+                _violationsMapping.Add(itemToSchedule, violator);
             }
         }
 
-        private void InitializeConstraintMap(List<ItemToSchedule> itemsToSchedule)
+        private void InitializeConstraintMap(IReadOnlyList<ItemToSchedule> itemsToSchedule)
         {
             for (int outer = 0; outer < itemsToSchedule.Count; outer++)
             {
@@ -155,6 +156,7 @@ namespace Schedule4Net.Core
         {
             ISet<ConstraintPartner> pairs = _constraintMap.ContainsKey(item1) ? _constraintMap[item1] : new System.Collections.Generic.HashSet<ConstraintPartner>();
             pairs.Add(new ConstraintPartner(item2, container, constraints));
+            _constraintMap.Remove(item1);
             _constraintMap.Add(item1, pairs);
         }
 
