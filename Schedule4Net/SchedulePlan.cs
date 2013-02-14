@@ -65,8 +65,9 @@ namespace Schedule4Net
 
             foreach (ItemToSchedule required in itemToSchedule.RequiredItems)
             {
-                var items = _dependentItems.ContainsKey(required) ? _dependentItems[required] : new HashSet<ItemToSchedule>();
+                ICollection<ItemToSchedule> items = _dependentItems.ContainsKey(required) ? _dependentItems[required] : new HashSet<ItemToSchedule>();
                 items.Add(itemToSchedule);
+                _dependentItems.Remove(required);
                 _dependentItems.Add(required, items);
             }
 
@@ -206,6 +207,7 @@ namespace Schedule4Net
             StartValues.Clear();
             foreach (KeyValuePair<int, int> entry in newStartValues)
             {
+                _startValues.Remove(entry);
                 _startValues.Add(entry);
             }
 

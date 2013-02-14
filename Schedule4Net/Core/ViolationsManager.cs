@@ -285,17 +285,18 @@ namespace Schedule4Net.Core
         {
             Violator newViolator = update.UpdatedViolator;
             ItemToSchedule itemToSchedule = newViolator.ScheduledItem.ItemToSchedule;
-            Violator oldViolator = ViolationsMapping[itemToSchedule];
+            Violator oldViolator = _violationsMapping[itemToSchedule];
 
             foreach (PartnerUpdate partnerUpdate in update.PartnerUpdates)
             {
                 partnerUpdate.Partner.ViolationsContainer.UpdateValues(partnerUpdate.NewContainerValues);
-                if (ViolationsTree.Remove(partnerUpdate.OldViolator))
+                if (_violationsTree.Remove(partnerUpdate.OldViolator))
                 {
-                    ViolationsTree.Add(partnerUpdate.UpdatedViolator);
+                    _violationsTree.Add(partnerUpdate.UpdatedViolator);
                 }
-
-                ViolationsMapping.Add(partnerUpdate.UpdatedViolator.ScheduledItem.ItemToSchedule, partnerUpdate.UpdatedViolator);
+                ItemToSchedule key = partnerUpdate.UpdatedViolator.ScheduledItem.ItemToSchedule;
+                _violationsMapping.Remove(key);
+                _violationsMapping.Add(partnerUpdate.UpdatedViolator.ScheduledItem.ItemToSchedule, partnerUpdate.UpdatedViolator);
             }
 
             // XXX maybe needed for fixed items?
@@ -303,10 +304,11 @@ namespace Schedule4Net.Core
             // violationsTree.add(newViolator);
             // }
 
-            ViolationsTree.Remove(oldViolator);
-            ViolationsTree.Add(newViolator);
+            _violationsTree.Remove(oldViolator);
+            _violationsTree.Add(newViolator);
 
-            ViolationsMapping.Add(itemToSchedule, newViolator);
+            _violationsMapping.Remove(itemToSchedule);
+            _violationsMapping.Add(itemToSchedule, newViolator);
 
             //predictor.itemWasMoved(itemToSchedule);
         }
