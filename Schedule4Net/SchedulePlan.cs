@@ -16,11 +16,6 @@ namespace Schedule4Net
             get { return new List<ScheduledItem>(_scheduledItems.Values); }
         }
 
-        public IDictionary<int, int> StartValues
-        {
-            get { return new Dictionary<int, int>(_startValues); }
-        }
-
         public int Makespan { get; set; }
 
         public IDictionary<ItemToSchedule, ICollection<ItemToSchedule>> DependentItems
@@ -204,7 +199,7 @@ namespace Schedule4Net
             {
                 newStartValues.Add(entry.Key + shiftValue, entry.Value);
             }
-            StartValues.Clear();
+            _startValues.Clear();
             foreach (KeyValuePair<int, int> entry in newStartValues)
             {
                 _startValues.Remove(entry);

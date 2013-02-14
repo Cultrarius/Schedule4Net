@@ -13,42 +13,19 @@ namespace Schedule4Net.Core
     /// </summary>
     internal class ViolationsManager
     {
-        public List<SingleItemConstraint> SingleConstraints
-        {
-            get { return new List<SingleItemConstraint>(_singleConstraints); }
-        }
-
-        public List<ItemPairConstraint> PairConstraints
-        {
-            get { return new List<ItemPairConstraint>(_pairConstraints); }
-        }
+        internal readonly System.Collections.Generic.IList<SingleItemConstraint> SingleConstraints;
+        internal readonly System.Collections.Generic.IList<ItemPairConstraint> PairConstraints;
 
         /// <summary>
         /// The constraint map defines which items are connected to other items through one or more constraints.
         /// </summary>
-        public System.Collections.Generic.IDictionary<ItemToSchedule, ISet<ConstraintPartner>> ConstraintMap
-        {
-            get { return new Dictionary<ItemToSchedule, ISet<ConstraintPartner>>(_constraintMap); }
-        }
+        internal readonly System.Collections.Generic.IDictionary<ItemToSchedule, ISet<ConstraintPartner>> ConstraintMap;
 
         /// <summary>
         /// The violationsTree is an ordered set of all the constraint violators (ordered by their violation value).
         /// It is similar to an ordered list, but it guarantees that an item can be contained at most once.
         /// In addition, it provides efficient log(n) operations to add and remove items.
         /// </summary>
-        protected TreeSet<Violator> ViolationsTree
-        {
-            get { return _violationsTree; }
-        }
-
-        protected System.Collections.Generic.IDictionary<ItemToSchedule, Violator> ViolationsMapping
-        {
-            get { return _violationsMapping; }
-        }
-
-        internal readonly System.Collections.Generic.IList<SingleItemConstraint> _singleConstraints;
-        internal readonly System.Collections.Generic.IList<ItemPairConstraint> _pairConstraints;
-        internal readonly System.Collections.Generic.IDictionary<ItemToSchedule, ISet<ConstraintPartner>> _constraintMap;
         private readonly TreeSet<Violator> _violationsTree;
         private readonly System.Collections.Generic.IDictionary<ItemToSchedule, Violator> _violationsMapping;
 
@@ -59,9 +36,9 @@ namespace Schedule4Net.Core
         /// <param name="pairConstraints">All the constraints that apply to a pair of items.</param>
         public ViolationsManager(IEnumerable<SingleItemConstraint> singleConstraints, IEnumerable<ItemPairConstraint> pairConstraints)
         {
-            _singleConstraints = new List<SingleItemConstraint>(singleConstraints);
-            _pairConstraints = new List<ItemPairConstraint>(pairConstraints);
-            _constraintMap = new Dictionary<ItemToSchedule, ISet<ConstraintPartner>>();
+            SingleConstraints = new List<SingleItemConstraint>(singleConstraints);
+            PairConstraints = new List<ItemPairConstraint>(pairConstraints);
+            ConstraintMap = new Dictionary<ItemToSchedule, ISet<ConstraintPartner>>();
             _violationsTree = new TreeSet<Violator>();
             _violationsMapping = new Dictionary<ItemToSchedule, Violator>();
         }
@@ -72,8 +49,8 @@ namespace Schedule4Net.Core
         /// <param name="plan">The plan containing scheduled items.</param>
         public void Initialize(SchedulePlan plan)
         {
-            _constraintMap.Clear();
-            ViolationsTree.Clear();
+            ConstraintMap.Clear();
+            _violationsTree.Clear();
             UpdateConstraints();
             List<ItemToSchedule> items = plan.ScheduledItems.Select(item => item.ItemToSchedule).ToList();
 
@@ -85,11 +62,11 @@ namespace Schedule4Net.Core
 
         private void UpdateConstraints()
         {
-            foreach (UpdateableConstraint constraint in _singleConstraints.OfType<UpdateableConstraint>())
+            foreach (UpdateableConstraint constraint in SingleConstraints.OfType<UpdateableConstraint>())
             {
                 constraint.UpdateConstraint();
             }
-            foreach (UpdateableConstraint constraint in _pairConstraints.OfType<UpdateableConstraint>())
+            foreach (UpdateableConstraint constraint in PairConstraints.OfType<UpdateableConstraint>())
             {
                 constraint.UpdateConstraint();
             }
@@ -105,9 +82,9 @@ namespace Schedule4Net.Core
                     continue;
                 }
                 ItemToSchedule itemToSchedule = item.ItemToSchedule;
-                if (_constraintMap.ContainsKey(itemToSchedule))
+                if (ConstraintMap.ContainsKey(itemToSchedule))
                 {
-                    ISet<ConstraintPartner> pairs = _constraintMap[itemToSchedule];
+                    ISet<ConstraintPartner> pairs = ConstraintMap[itemToSchedule];
                     if (pairs.Count > 0)
                     {
                         CheckPairConstraints(item, plan, pairs, false);
@@ -133,31 +110,31 @@ namespace Schedule4Net.Core
                     {
                         break;
                     }
-                    System.Collections.Generic.IList<ItemPairConstraint> constraints = new List<ItemPairConstraint>(_pairConstraints.Count);
-                    foreach (ItemPairConstraint constraint in _pairConstraints.Where(constraint => constraint.NeedsChecking(itemOuter, itemInner)))
+                    System.Collections.Generic.IList<ItemPairConstraint> constraints = new List<ItemPairConstraint>(PairConstraints.Count);
+                    foreach (ItemPairConstraint constraint in PairConstraints.Where(constraint => constraint.NeedsChecking(itemOuter, itemInner)))
                     {
                         constraints.Add(constraint);
                     }
 
                     if (constraints.Count <= 0) continue;
-                    ViolationsContainer container = new ViolationsContainer(new List<ConstraintDecision>(_pairConstraints.Count));
+                    ViolationsContainer container = new ViolationsContainer(new List<ConstraintDecision>(PairConstraints.Count));
                     AddPair(itemOuter, itemInner, container, constraints);
                     AddPair(itemInner, itemOuter, container, constraints);
                 }
 
-                if (!_constraintMap.ContainsKey(itemOuter))
+                if (!ConstraintMap.ContainsKey(itemOuter))
                 {
-                    _constraintMap.Add(itemOuter, new System.Collections.Generic.HashSet<ConstraintPartner>());
+                    ConstraintMap.Add(itemOuter, new System.Collections.Generic.HashSet<ConstraintPartner>());
                 }
             }
         }
 
         private void AddPair(ItemToSchedule item1, ItemToSchedule item2, ViolationsContainer container, System.Collections.Generic.IList<ItemPairConstraint> constraints)
         {
-            ISet<ConstraintPartner> pairs = _constraintMap.ContainsKey(item1) ? _constraintMap[item1] : new System.Collections.Generic.HashSet<ConstraintPartner>();
+            ISet<ConstraintPartner> pairs = ConstraintMap.ContainsKey(item1) ? ConstraintMap[item1] : new System.Collections.Generic.HashSet<ConstraintPartner>();
             pairs.Add(new ConstraintPartner(item2, container, constraints));
-            _constraintMap.Remove(item1);
-            _constraintMap.Add(item1, pairs);
+            ConstraintMap.Remove(item1);
+            ConstraintMap.Add(item1, pairs);
         }
 
         /// <summary>
@@ -173,7 +150,7 @@ namespace Schedule4Net.Core
         public ViolatorUpdate TryViolatorUpdate(ScheduledItem newItem, SchedulePlan plan)
         {
             ItemToSchedule itemToSchedule = newItem.ItemToSchedule;
-            Violator violator = ViolationsMapping[itemToSchedule];
+            Violator violator = _violationsMapping[itemToSchedule];
 
             ViolatorValues newValues = new ViolatorValues();
             CalculateSingleConstraintValues(newItem, violator, newValues);
@@ -186,9 +163,9 @@ namespace Schedule4Net.Core
             //}
 
             System.Collections.Generic.IList<PartnerUpdate> partnerUpdates;
-            if (_constraintMap.ContainsKey(itemToSchedule))
+            if (ConstraintMap.ContainsKey(itemToSchedule))
             {
-                ISet<ConstraintPartner> partners = _constraintMap[itemToSchedule];
+                ISet<ConstraintPartner> partners = ConstraintMap[itemToSchedule];
                 partnerUpdates = new List<PartnerUpdate>(partners.Count);
 
                 foreach (ConstraintPartner partner in partners)
@@ -210,8 +187,8 @@ namespace Schedule4Net.Core
 
         private void UpdatePartnerViolator(System.Collections.Generic.IList<PartnerUpdate> partnerUpdates, ConstraintPartner partner, ScheduledItem partnerItem, ViolatorValues newPartnerValues)
         {
-            if (!ViolationsMapping.ContainsKey(partner.PartnerItem)) return;
-            Violator partnerViolator = ViolationsMapping[partner.PartnerItem];
+            if (!_violationsMapping.ContainsKey(partner.PartnerItem)) return;
+            Violator partnerViolator = _violationsMapping[partner.PartnerItem];
             ViolatorValues oldParterValues = partner.ViolationsContainer.Values;
             int newHardValue = partnerViolator.HardViolationsValue +
                                (newPartnerValues.HardViolationsValue - oldParterValues.HardViolationsValue);
@@ -245,7 +222,7 @@ namespace Schedule4Net.Core
 
         private void CalculateSingleConstraintValues(ScheduledItem newItem, Violator violator, ViolatorValues newValues)
         {
-            foreach (SingleItemConstraint constraint in _singleConstraints)
+            foreach (SingleItemConstraint constraint in SingleConstraints)
             {
                 ConstraintDecision decision = constraint.Check(newItem);
                 if (!decision.Fulfilled)
@@ -360,16 +337,16 @@ namespace Schedule4Net.Core
         private void UpdatePartner(ConstraintPartner partner, ScheduledItem partnerItem, ViolationsContainer container,
             ViolatorValues oldParterValues)
         {
-            if (!ViolationsMapping.ContainsKey(partner.PartnerItem)) return;
+            if (!_violationsMapping.ContainsKey(partner.PartnerItem)) return;
 
-            Violator partnerViolator = ViolationsMapping[partner.PartnerItem];
+            Violator partnerViolator = _violationsMapping[partner.PartnerItem];
             ViolatorValues newParterValues = container.Values;
-            if (!ViolationsTree.Remove(partnerViolator)) { throw new SchedulingException("Fixed item?"); }
+            if (!_violationsTree.Remove(partnerViolator)) { throw new SchedulingException("Fixed item?"); }
             int newHardValue = partnerViolator.HardViolationsValue + (newParterValues.HardViolationsValue - oldParterValues.HardViolationsValue);
             int newSoftValue = partnerViolator.SoftViolationsValue + (newParterValues.SoftViolationsValue - oldParterValues.SoftViolationsValue);
             Violator updatedViolator = new Violator(partnerItem, newHardValue, newSoftValue, this);
-            ViolationsTree.Add(updatedViolator);
-            ViolationsMapping.Add(partnerItem.ItemToSchedule, updatedViolator);
+            _violationsTree.Add(updatedViolator);
+            _violationsMapping.Add(partnerItem.ItemToSchedule, updatedViolator);
         }
 
         private static void CheckUpdateValid(Violator violator, int newHardViolationsValue, int newSoftViolationsValue)
@@ -401,17 +378,17 @@ namespace Schedule4Net.Core
         /// <remarks>This method is guaranteed to run in O(log(n)).</remarks>
         public Violator GetBiggestViolator(Violator upperBound)
         {
-            if (ViolationsTree.Count == 0) return null;
-            if (upperBound == null) return ViolationsTree.Last();
+            if (_violationsTree.Count == 0) return null;
+            if (upperBound == null) return _violationsTree.Last();
             Violator returnValue;
-            ViolationsTree.TryPredecessor(upperBound, out returnValue);
+            _violationsTree.TryPredecessor(upperBound, out returnValue);
             return returnValue;
         }
 
         public System.Collections.Generic.ICollection<ScheduledItem> GetHardViolatedItems(ScheduledItem itemToCheck, SchedulePlan plan)
         {
             System.Collections.Generic.ICollection<ScheduledItem> violatedItems = new List<ScheduledItem>();
-            foreach (ConstraintPartner constraintPartner in _constraintMap[itemToCheck.ItemToSchedule])
+            foreach (ConstraintPartner constraintPartner in ConstraintMap[itemToCheck.ItemToSchedule])
             {
                 ScheduledItem constraintItem = plan.GetScheduledItem(constraintPartner.PartnerItem);
                 foreach (ItemPairConstraint constraint in constraintPartner.Constraints)
@@ -482,7 +459,7 @@ namespace Schedule4Net.Core
             // TODO: pair-violations are counted twice
             foreach (ScheduledItem itemToCheck in plan.ScheduledItems)
             {
-                foreach (SingleItemConstraint constraint in _singleConstraints)
+                foreach (SingleItemConstraint constraint in SingleConstraints)
                 {
                     ConstraintDecision decision = constraint.Check(itemToCheck);
                     if (decision.Fulfilled) continue;
@@ -496,7 +473,7 @@ namespace Schedule4Net.Core
                     }
                 }
 
-                ISet<ConstraintPartner> partners = _constraintMap[itemToCheck.ItemToSchedule];
+                ISet<ConstraintPartner> partners = ConstraintMap[itemToCheck.ItemToSchedule];
                 foreach (ConstraintPartner partner in partners)
                 {
                     ScheduledItem partnerItem = plan.GetScheduledItem(partner.PartnerItem);
@@ -523,7 +500,7 @@ namespace Schedule4Net.Core
         {
             ViolatorValues values = new ViolatorValues();
 
-            foreach (SingleItemConstraint constraint in _singleConstraints)
+            foreach (SingleItemConstraint constraint in SingleConstraints)
             {
                 ConstraintDecision decision = constraint.Check(itemToCheck);
                 if (decision.Fulfilled) continue;
@@ -537,7 +514,7 @@ namespace Schedule4Net.Core
                 }
             }
 
-            ISet<ConstraintPartner> partners = _constraintMap[itemToCheck.ItemToSchedule];
+            ISet<ConstraintPartner> partners = ConstraintMap[itemToCheck.ItemToSchedule];
             foreach (ConstraintPartner partner in partners)
             {
                 ScheduledItem partnerItem = plan.GetScheduledItem(partner.PartnerItem);
@@ -566,7 +543,7 @@ namespace Schedule4Net.Core
         public void PlanHasBeenUpdated(SchedulePlan oldPlan, SchedulePlan newPlan)
         {
             // TODO: improve the update
-            ViolationsTree.Clear();
+            _violationsTree.Clear();
             InitializeViolationTree(newPlan);
 
             //predictor.planHasBeenUpdated(oldPlan, newPlan);

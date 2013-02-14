@@ -36,7 +36,7 @@ namespace Schedule4Net
         /// the number of backsteps the scheduler had to take while trying to solve the scheduling problem.
         /// This property is only interesting for debug reasons, so do not bother with it.
         /// </summary>
-        public int Backsteps { get; set; }
+        public int Backsteps { get; private set; }
 
         /// <summary>
         /// Creates a new instance of the scheduler using the constraints of the given <see cref="ViolationsManager"/>.

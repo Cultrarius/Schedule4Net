@@ -42,7 +42,7 @@ namespace Schedule4Net.Core
 
         private void GetPairConstraintDecisions()
         {
-            ISet<ViolationsManager.ConstraintPartner> partners = Manager._constraintMap[ScheduledItem.ItemToSchedule];
+            ISet<ViolationsManager.ConstraintPartner> partners = Manager.ConstraintMap[ScheduledItem.ItemToSchedule];
             if (partners != null && partners.Count != 0)
             {
                 CheckPartnerConstraints(partners);
@@ -61,7 +61,7 @@ namespace Schedule4Net.Core
 
         private void CheckSingleConstraints()
         {
-            foreach (SingleItemConstraint constraint in Manager._singleConstraints)
+            foreach (SingleItemConstraint constraint in Manager.SingleConstraints)
             {
                 Aggregate(constraint.Check(ScheduledItem));
             }
