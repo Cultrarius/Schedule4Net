@@ -2,7 +2,7 @@
 
 namespace Schedule4Net.Constraint.Impl
 {
-    public class DebugTestConstraint : ItemPairConstraint
+    public sealed class DebugTestConstraint : ItemPairConstraint
     {
         ConstraintDecision ItemPairConstraint.Check(ScheduledItem item1, ScheduledItem item2)
         {

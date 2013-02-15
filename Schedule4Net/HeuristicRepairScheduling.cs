@@ -25,7 +25,7 @@ namespace Schedule4Net
         /// After each successful movement operation the scheduler will take a snapshot of the current configuration of all the scheduled items.
         /// This property contains a list of these snapshots in a chronological order. This is very helpful for debugging and to visualize the workings of the scheduler.
         /// </summary>
-        public List<IList<ScheduledItem>> Snapshots { get {return new List<IList<ScheduledItem>>(_snapshots); } }
+        public IList<IList<ScheduledItem>> Snapshots { get {return new List<IList<ScheduledItem>>(_snapshots); } }
         
         /// <summary>
         /// Is true if the scheduler reuses the previous result to start the calculations with, false otherwise
@@ -113,7 +113,7 @@ namespace Schedule4Net
                 if (_plan.CanBeMoved(violator.ScheduledItem))
                 {
                     bool foundConfiguration = false;
-                    foreach (int possibleStart in _plan.GetExistingStartValues())
+                    foreach (int possibleStart in _plan.StartValues)
                     {
                         if (foundConfiguration
                             && _plan.Makespan < (violator.ScheduledItem.ItemToSchedule.MaxDuration + possibleStart))
@@ -206,33 +206,37 @@ namespace Schedule4Net
             IDictionary<ItemToSchedule, DependencyNode> dependencyLevels = new Dictionary<ItemToSchedule, DependencyNode>();
             AddToTree(violator.ScheduledItem.ItemToSchedule, dependencyLevels, newPlan, 0);
 
-            C5.TreeSet<DependencyNode> dependencyTree = new C5.TreeSet<DependencyNode>();
-            dependencyTree.AddAll(dependencyLevels.Values);
-
-            foreach (DependencyNode dependencyNode in dependencyTree)
+            using (C5.TreeSet<DependencyNode> dependencyTree = new C5.TreeSet<DependencyNode>())
             {
-                newPlan.Unschedule(dependencyNode.ScheduledItem);
-            }
+                dependencyTree.AddAll(dependencyLevels.Values);
 
-            foreach (DependencyNode dependencyNode in dependencyTree)
-            {
-                ViolatorValues bestValues = null;
-                ScheduledItem bestItem = null;
-                foreach (int possibleStart in newPlan.GetExistingStartValues())
+                foreach (DependencyNode dependencyNode in dependencyTree)
                 {
-                    ScheduledItem newItem = new ScheduledItem(dependencyNode.ScheduledItem.ItemToSchedule, possibleStart);
-                    ViolatorValues violatorValues = _violationsManager.CheckViolationsForItem(newItem, newPlan);
-                    if (bestValues == null
-                        || (violatorValues.HardViolationsValue < bestValues.HardViolationsValue)
-                        || (violatorValues.HardViolationsValue == bestValues.HardViolationsValue && violatorValues.SoftViolationsValue < bestValues.SoftViolationsValue))
-                    {
-                        bestValues = violatorValues;
-                        bestItem = newItem;
-                    }
+                    newPlan.Unschedule(dependencyNode.ScheduledItem);
                 }
-                newPlan.Schedule(bestItem);
-            }
 
+                foreach (DependencyNode dependencyNode in dependencyTree)
+                {
+                    ViolatorValues bestValues = null;
+                    ScheduledItem bestItem = null;
+                    foreach (int possibleStart in newPlan.StartValues)
+                    {
+                        ScheduledItem newItem = new ScheduledItem(dependencyNode.ScheduledItem.ItemToSchedule,
+                                                                  possibleStart);
+                        ViolatorValues violatorValues = _violationsManager.CheckViolationsForItem(newItem, newPlan);
+                        if (bestValues == null
+                            || (violatorValues.HardViolationsValue < bestValues.HardViolationsValue)
+                            ||
+                            (violatorValues.HardViolationsValue == bestValues.HardViolationsValue &&
+                             violatorValues.SoftViolationsValue < bestValues.SoftViolationsValue))
+                        {
+                            bestValues = violatorValues;
+                            bestItem = newItem;
+                        }
+                    }
+                    newPlan.Schedule(bestItem);
+                }
+            }
             _configurationsManager.AddPlanConfiguration(newPlan);
         }
 
@@ -416,7 +420,7 @@ namespace Schedule4Net
                     newItemsMap.Add(item.Id, item);
                 }
 
-                List<ScheduledItem> oldScheduledItems = oldPlan.ScheduledItems;
+                IList<ScheduledItem> oldScheduledItems = oldPlan.ScheduledItems;
                 foreach (ScheduledItem oldScheduledItem in oldScheduledItems)
                 {
                     ItemToSchedule oldItem = oldScheduledItem.ItemToSchedule;

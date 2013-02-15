@@ -18,14 +18,17 @@ namespace Schedule4Net
 
         public int Makespan { get; set; }
 
-        public IDictionary<ItemToSchedule, ICollection<ItemToSchedule>> DependentItems
-        {
-            get { return new Dictionary<ItemToSchedule, ICollection<ItemToSchedule>>(_dependentItems); }
-        }
-
         public ISet<ScheduledItem> FixedItems
         {
             get { return new HashSet<ScheduledItem>(_fixedItems); }
+        }
+
+        public SortedSet<int> StartValues
+        {
+            get
+            {
+                return new SortedSet<int>(_startValues.Keys) { 0 };
+            }
         }
 
         public SchedulePlan()
@@ -133,12 +136,6 @@ namespace Schedule4Net
             {
                 _startValues.Add(startValue, count);
             }
-        }
-
-        public SortedSet<int> GetExistingStartValues()
-        {
-            SortedSet<int> start = new SortedSet<int>(_startValues.Keys) { 0 };
-            return start;
         }
 
         public ScheduledItem MoveScheduledItem(ItemToSchedule itemToMove, int newStart)

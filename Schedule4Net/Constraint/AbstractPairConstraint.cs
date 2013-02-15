@@ -10,7 +10,7 @@ namespace Schedule4Net.Constraint
             T it2 = item2 as T;
             if (it1 == null || it2 == null)
             {
-                throw new ArgumentNullException();
+                throw new ArgumentNullException("Unable to cast provided items to desired type " + typeof(T));
             }
             return Check(it1, it2);
         }

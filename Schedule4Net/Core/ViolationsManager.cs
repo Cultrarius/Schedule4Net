@@ -11,7 +11,7 @@ namespace Schedule4Net.Core
     /// This class is responsible for the management of all constraints and their violations by scheduled items.
     /// It tries to manage constraint violations in an efficient way and also handles updates of the <see cref="SchedulePlan"/>.
     /// </summary>
-    internal class ViolationsManager
+    internal class ViolationsManager : IDisposable
     {
         internal readonly System.Collections.Generic.IList<SingleItemConstraint> SingleConstraints;
         internal readonly System.Collections.Generic.IList<ItemPairConstraint> PairConstraints;
@@ -198,7 +198,7 @@ namespace Schedule4Net.Core
             partnerUpdates.Add(new PartnerUpdate(partner, newPartnerValues, partnerViolator, updatedPartner));
         }
 
-        private void CalculatePairConstraintValues(ScheduledItem newItem, Violator violator, ViolatorValues newValues,
+        private static void CalculatePairConstraintValues(ScheduledItem newItem, Violator violator, ViolatorValues newValues,
             ConstraintPartner partner, ScheduledItem partnerItem, ViolatorValues newPartnerValues)
         {
             foreach (ItemPairConstraint constraint in partner.Constraints)
@@ -547,6 +547,11 @@ namespace Schedule4Net.Core
             InitializeViolationTree(newPlan);
 
             //predictor.planHasBeenUpdated(oldPlan, newPlan);
+        }
+
+        public void Dispose()
+        {
+            _violationsTree.Dispose();
         }
     }
 }

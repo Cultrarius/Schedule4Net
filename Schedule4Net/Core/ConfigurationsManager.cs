@@ -70,12 +70,6 @@ namespace Schedule4Net.Core
             plan.MoveScheduledItem(oldItem.ItemToSchedule, oldItem.Start);
         }
 
-        public ScheduledItem GetBestConfiguration()
-        {
-            return _bestConfiguration == null ? _referenceConfiguration.Violator.ScheduledItem : _bestConfiguration.Violator
-                    .ScheduledItem;
-        }
-
         private class Configuration : IComparable<Configuration>
         {
             private readonly int _planMakespan;

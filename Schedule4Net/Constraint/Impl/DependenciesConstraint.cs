@@ -3,7 +3,7 @@ using Schedule4Net.Core;
 
 namespace Schedule4Net.Constraint.Impl
 {
-    public class DependenciesConstraint : ItemPairConstraint
+    public sealed class DependenciesConstraint : ItemPairConstraint
     {
         public ConstraintDecision Check(ScheduledItem item1, ScheduledItem item2)
         {
