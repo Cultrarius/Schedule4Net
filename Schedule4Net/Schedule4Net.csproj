@@ -44,6 +44,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Constraint\AbstractPairConstraint.cs" />
+    <Compile Include="Constraint\AbstractSingleConstraint.cs" />
     <Compile Include="Constraint\ConstraintDecision.cs" />
     <Compile Include="Constraint\ConstraintPrediction.cs" />
     <Compile Include="Constraint\Impl\DebugTestConstraint.cs" />
