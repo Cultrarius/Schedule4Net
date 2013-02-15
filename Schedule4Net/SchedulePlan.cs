@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Schedule4Net
 {
-    public class SchedulePlan : ICloneable
+    public sealed class SchedulePlan : ICloneable
     {
         private readonly IDictionary<int, ScheduledItem> _scheduledItems;
         private readonly IDictionary<int, int> _startValues;
@@ -23,7 +23,7 @@ namespace Schedule4Net
             get { return new HashSet<ScheduledItem>(_fixedItems); }
         }
 
-        public SortedSet<int> StartValues
+        internal SortedSet<int> StartValues
         {
             get
             {

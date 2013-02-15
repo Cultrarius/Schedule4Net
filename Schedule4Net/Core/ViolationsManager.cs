@@ -98,7 +98,7 @@ namespace Schedule4Net.Core
             }
         }
 
-        private void InitializeConstraintMap(IReadOnlyList<ItemToSchedule> itemsToSchedule)
+        private void InitializeConstraintMap(System.Collections.Generic.IList<ItemToSchedule> itemsToSchedule)
         {
             for (int outer = 0; outer < itemsToSchedule.Count; outer++)
             {

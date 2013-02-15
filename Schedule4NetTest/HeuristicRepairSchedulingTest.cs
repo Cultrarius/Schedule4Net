@@ -965,7 +965,7 @@ namespace Schedule4NetTest
             // Test 22 (req Test 11, Test 2)
             durations.Clear();
             durations.Add(lane1, 200);
-            required = new List<ItemToSchedule> {unit2, unit3};
+            required = new List<ItemToSchedule> { unit2, unit3 };
             items.Add(new ItemToSchedule(22, durations, required));
 
             SchedulePlan result = scheduling.Schedule(items, fixedItems);
@@ -1088,6 +1088,20 @@ namespace Schedule4NetTest
 
             Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
             Assert.AreEqual(1300, result.Makespan);
+            Assert.IsTrue(AllConstraintsSatisfied(result));
+        }
+
+        [TestMethod]
+        public void TestGenerateManyTests1()
+        {
+            // Creates a large number of tests and tries to schedule them. This should not make too many problems as there is just one item per lane.
+            List<ScheduledItem> fixedItems = new List<ScheduledItem>();
+            List<ItemToSchedule> items = InitializeItemsToForTest(100, 1);
+
+            SchedulePlan result = scheduling.Schedule(items, fixedItems);
+
+            Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
+            Assert.AreEqual(100 * 100, result.Makespan);
             Assert.IsTrue(AllConstraintsSatisfied(result));
         }
 
