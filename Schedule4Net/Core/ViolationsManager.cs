@@ -28,6 +28,8 @@ namespace Schedule4Net.Core
         /// </summary>
         private readonly TreeSet<Violator> _violationsTree;
         private readonly System.Collections.Generic.IDictionary<ItemToSchedule, Violator> _violationsMapping;
+        private Predictor _predictor;
+        internal bool UsingPrediction = true;
 
         /// <summary>
         /// Creates a new instance of the manager that uses the given constraints to determine schedule violations.
@@ -57,7 +59,7 @@ namespace Schedule4Net.Core
             if (items.Count == 0) return;
             InitializeConstraintMap(items);
             InitializeViolationTree(plan);
-            //predictor = new Predictor(plan, _constraintMap);
+            _predictor = new Predictor(plan, ConstraintMap);
         }
 
         private void UpdateConstraints()
@@ -155,12 +157,11 @@ namespace Schedule4Net.Core
             ViolatorValues newValues = new ViolatorValues();
             CalculateSingleConstraintValues(newItem, violator, newValues);
 
-            //if (usingPrediction)
-
-            //     {
-            //    ConflictPrediction prediction = predictor.predictConflicts(newItem);
-            //    checkUpdateValid(violator, newValues.HardViolationsValue + prediction.getDefinedHardConflictValue(), newValues.SoftViolationsValue);
-            //}
+            if (UsingPrediction)
+            {
+                Predictor.ConflictPrediction prediction = _predictor.PredictConflicts(newItem);
+                CheckUpdateValid(violator, newValues.HardViolationsValue + prediction.GetDefinedHardConflictValue(), newValues.SoftViolationsValue);
+            }
 
             System.Collections.Generic.IList<PartnerUpdate> partnerUpdates;
             if (ConstraintMap.ContainsKey(itemToSchedule))
@@ -287,7 +288,7 @@ namespace Schedule4Net.Core
             _violationsMapping.Remove(itemToSchedule);
             _violationsMapping.Add(itemToSchedule, newViolator);
 
-            //predictor.itemWasMoved(itemToSchedule);
+            _predictor.ItemWasMoved(itemToSchedule);
         }
 
         private void CheckPairConstraints(ScheduledItem scheduledItem, SchedulePlan plan, IEnumerable<ConstraintPartner> partners,
@@ -546,7 +547,7 @@ namespace Schedule4Net.Core
             _violationsTree.Clear();
             InitializeViolationTree(newPlan);
 
-            //predictor.planHasBeenUpdated(oldPlan, newPlan);
+            _predictor.PlanHasBeenUpdated(oldPlan, newPlan);
         }
 
         public void Dispose()
