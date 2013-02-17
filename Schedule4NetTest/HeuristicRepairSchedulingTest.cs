@@ -1105,181 +1105,185 @@ namespace Schedule4NetTest
             Assert.IsTrue(AllConstraintsSatisfied(result));
         }
 
-        //[TestMethod]
-        //public void testHarderLocalOptimum1() {
-        //    // This local optimum cannot be solved by using the dependencies, but the items must be shifted.
-        //    List<ScheduledItem> fixedItems = new List<ScheduledItem>();
-        //    List<ItemToSchedule> items = new List<ItemToSchedule>();
+        [TestMethod]
+        public void testHarderLocalOptimum1() {
+            // This local optimum cannot be solved by using the dependencies, but the items must be shifted.
+            List<ScheduledItem> fixedItems = new List<ScheduledItem>();
+            List<ItemToSchedule> items = new List<ItemToSchedule>();
 
-        //    IDictionary<Lane, int> durations = new Dictionary<Lane, int>();
-        //    Lane lane0 = new Lane(0);
-        //    Lane lane1 = new Lane(1);
+            IDictionary<Lane, int> durations = new Dictionary<Lane, int>();
+            Lane lane0 = new Lane(0);
+            Lane lane1 = new Lane(1);
 
-        //    // Test 1
-        //    durations.Clear();
-        //    durations.Add(lane0, 100);
-        //    ItemToSchedule unit1 = new ItemToSchedule(1, durations, new List<ItemToSchedule>());
-        //    items.Add(unit1);
+            // Test 1
+            durations.Clear();
+            durations.Add(lane0, 100);
+            ItemToSchedule unit1 = new ItemToSchedule(1, durations, new List<ItemToSchedule>());
+            items.Add(unit1);
 
-        //    // Test 2
-        //    durations.Clear();
-        //    durations.Add(lane0, 100);
-        //    ItemToSchedule unit2 = new ItemToSchedule(2, durations, new List<ItemToSchedule>());
-        //    items.Add(unit2);
+            // Test 2
+            durations.Clear();
+            durations.Add(lane0, 100);
+            ItemToSchedule unit2 = new ItemToSchedule(2, durations, new List<ItemToSchedule>());
+            items.Add(unit2);
 
-        //    // Test 11
-        //    durations.Clear();
-        //    durations.Add(lane1, 100);
-        //    ItemToSchedule unit11 = new ItemToSchedule(11, durations, new List<ItemToSchedule>());
-        //    items.Add(unit11);
+            // Test 11
+            durations.Clear();
+            durations.Add(lane1, 100);
+            ItemToSchedule unit11 = new ItemToSchedule(11, durations, new List<ItemToSchedule>());
+            items.Add(unit11);
 
-        //    // Test 22
-        //    durations.Clear();
-        //    durations.Add(lane1, 100);
-        //    ItemToSchedule unit22 = new ItemToSchedule(22, durations, new List<ItemToSchedule>());
-        //    items.Add(unit22);
+            // Test 22
+            durations.Clear();
+            durations.Add(lane1, 100);
+            ItemToSchedule unit22 = new ItemToSchedule(22, durations, new List<ItemToSchedule>());
+            items.Add(unit22);
 
-        //    // create a new special constraint
+            // create a new special constraint
 
-        //    ItemPairConstraint newConstraint = new ItemPairConstraint() {
-        //        @Override
-        //        public ConstraintPrediction predictDecision(ItemToSchedule movedItem, ItemToSchedule fixItem) {
-        //            return new ConstraintPrediction(Prediction.UNKNOWN, ConstraintPrediction.Prediction.UNKNOWN, ConstraintPrediction.Prediction.UNKNOWN, 100);
-        //        }
+            TestConstraint1 newConstraint = new TestConstraint1
+                {
+                    unit1 = unit1,
+                    unit11 = unit11,
+                    unit2 = unit2,
+                    unit22 = unit22
+                };
 
-        //        @Override
-        //        public boolean needsChecking(ItemToSchedule item1, ItemToSchedule item2) {
-        //            return true;
-        //        }
+            pairConstraints.Add(newConstraint);
+            scheduling = new HeuristicRepairScheduling(singleConstraints, pairConstraints);
 
-        //        @Override
-        //        public ConstraintDecision check(ScheduledItem item1, ScheduledItem item2) {
-        //            ScheduledItem itemA = null;
-        //            ScheduledItem itemB = null;
-        //            if (item1.ItemToSchedule == unit1 && item2.ItemToSchedule == unit2) {
-        //                itemA = item1;
-        //                itemB = item2;
-        //            } else if (item2.ItemToSchedule == unit1 && item1.ItemToSchedule == unit2) {
-        //                itemA = item2;
-        //                itemB = item1;
-        //            } else if (item1.ItemToSchedule == unit11 && item2.ItemToSchedule == unit22) {
-        //                itemA = item1;
-        //                itemB = item2;
-        //            } else if (item2.ItemToSchedule == unit11 && item1.ItemToSchedule == unit22) {
-        //                itemA = item2;
-        //                itemB = item1;
-        //            }
+            SchedulePlan result = scheduling.Schedule(items, fixedItems);
 
-        //            if (itemA != null && itemB != null && (itemA.getStart() + itemA.ItemToSchedule.getMaxDuration()) != itemB.getStart()) {
-        //                return new ConstraintDecision(true, false, 100);
-        //            }
+            Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
+            Assert.AreEqual(400, result.Makespan);
+            Assert.IsTrue(AllConstraintsSatisfied(result));
+        }
 
-        //            return new ConstraintDecision(true, true, 0);
-        //        }
-        //    };
+        internal class TestConstraint1 : AbstractPairConstraint<ScheduledItem>
+        {
+            internal ItemToSchedule unit1;
+            internal ItemToSchedule unit11;
+            internal ItemToSchedule unit2;
+            internal ItemToSchedule unit22;
 
-        //    pairConstraints.Add(newConstraint);
-        //    manager = new ViolationsManager(singleConstraints, pairConstraints);
-        //    scheduling = new HeuristicRepairScheduling(manager);
+            protected override ConstraintDecision CheckConstraint(ScheduledItem item1, ScheduledItem item2)
+            {
+                ScheduledItem itemA = null;
+                ScheduledItem itemB = null;
+                if (item1.ItemToSchedule == unit1 && item2.ItemToSchedule == unit2) {
+                    itemA = item1;
+                    itemB = item2;
+                } else if (item2.ItemToSchedule == unit1 && item1.ItemToSchedule == unit2) {
+                    itemA = item2;
+                    itemB = item1;
+                } else if (item1.ItemToSchedule == unit11 && item2.ItemToSchedule == unit22) {
+                    itemA = item1;
+                    itemB = item2;
+                } else if (item2.ItemToSchedule == unit11 && item1.ItemToSchedule == unit22) {
+                    itemA = item2;
+                    itemB = item1;
+                }
 
-        //    SchedulePlan result = scheduling.Schedule(items, fixedItems);
+                if (itemA != null && itemB != null && (itemA.Start + itemA.ItemToSchedule.MaxDuration) != itemB.Start) {
+                    return new ConstraintDecision(true, false, 100);
+                }
 
-        //    Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
-        //    Assert.AreEqual(400, result.Makespan);
-        //    Assert.IsTrue(AllConstraintsSatisfied(result));
-        //}
+                return new ConstraintDecision(true, true, 0);
+            }
+        }
 
-        //[TestMethod]
-        //public void testHarderLocalOptimum2() {
-        //    // This local optimum cannot be solved by using the dependencies or a right-shift, but the items must be shifted
-        //    // to the left.
-        //    List<ScheduledItem> fixedItems = new List<ScheduledItem>();
-        //    List<ItemToSchedule> items = new List<ItemToSchedule>();
+        [TestMethod]
+        public void testHarderLocalOptimum2() {
+            // This local optimum cannot be solved by using the dependencies or a right-shift, but the items must be shifted
+            // to the left.
+            List<ScheduledItem> fixedItems = new List<ScheduledItem>();
+            List<ItemToSchedule> items = new List<ItemToSchedule>();
 
-        //    IDictionary<Lane, int> durations = new Dictionary<Lane, int>();
-        //    Lane lane0 = new Lane(0);
-        //    Lane lane1 = new Lane(1);
+            IDictionary<Lane, int> durations = new Dictionary<Lane, int>();
+            Lane lane0 = new Lane(0);
+            Lane lane1 = new Lane(1);
 
-        //    // Test 1
-        //    durations.Clear();
-        //    durations.Add(lane0, 100);
-        //    ItemToSchedule unit1 = new ItemToSchedule(1, durations, new List<ItemToSchedule>());
-        //    items.Add(unit1);
+            // Test 1
+            durations.Clear();
+            durations.Add(lane0, 100);
+            ItemToSchedule unit1 = new ItemToSchedule(1, durations, new List<ItemToSchedule>());
+            items.Add(unit1);
 
-        //    // Test 2
-        //    durations.Clear();
-        //    durations.Add(lane0, 100);
-        //    IList<ItemToSchedule> req2 = new List<ItemToSchedule>();
-        //    req2.Add(unit1);
-        //    ItemToSchedule unit2 = new ItemToSchedule(2, durations, req2);
-        //    items.Add(unit2);
+            // Test 2
+            durations.Clear();
+            durations.Add(lane0, 100);
+            IList<ItemToSchedule> req2 = new List<ItemToSchedule>();
+            req2.Add(unit1);
+            ItemToSchedule unit2 = new ItemToSchedule(2, durations, req2);
+            items.Add(unit2);
 
-        //    // Test 3 (has to be scheduled before test 1 and test 4)
-        //    durations.Clear();
-        //    durations.Add(lane0, 100);
-        //    ItemToSchedule unit3 = new ItemToSchedule(3, durations, new List<ItemToSchedule>());
-        //    items.Add(unit3);
+            // Test 3 (has to be scheduled before test 1 and test 4)
+            durations.Clear();
+            durations.Add(lane0, 100);
+            ItemToSchedule unit3 = new ItemToSchedule(3, durations, new List<ItemToSchedule>());
+            items.Add(unit3);
 
-        //    // Test 4
-        //    durations.Clear();
-        //    durations.Add(lane1, 100);
-        //    ItemToSchedule unit4 = new ItemToSchedule(4, durations, new List<ItemToSchedule>());
-        //    items.Add(unit4);
+            // Test 4
+            durations.Clear();
+            durations.Add(lane1, 100);
+            ItemToSchedule unit4 = new ItemToSchedule(4, durations, new List<ItemToSchedule>());
+            items.Add(unit4);
 
-        //    // Test 5
-        //    durations.Clear();
-        //    durations.Add(lane1, 100);
-        //    ItemToSchedule unit5 = new ItemToSchedule(5, durations, new List<ItemToSchedule>());
-        //    items.Add(unit5);
+            // Test 5
+            durations.Clear();
+            durations.Add(lane1, 100);
+            ItemToSchedule unit5 = new ItemToSchedule(5, durations, new List<ItemToSchedule>());
+            items.Add(unit5);
 
-        //    // create a new special constraint
+            // create a new special constraint
 
-        //    ItemPairConstraint newConstraint = new ItemPairConstraint() {
-        //        @Override
-        //        public ConstraintPrediction predictDecision(ItemToSchedule movedItem, ItemToSchedule fixItem) {
-        //            return new ConstraintPrediction(Prediction.UNKNOWN, Prediction.UNKNOWN, Prediction.UNKNOWN, 0);
-        //        }
+            TestConstraint2 newConstraint = new TestConstraint2()
+            {
+                unit1 = unit1,
+                unit3 = unit3,
+                unit4 = unit4
+            };
 
-        //        @Override
-        //        public boolean needsChecking(ItemToSchedule item1, ItemToSchedule item2) {
-        //            return true;
-        //        }
+            pairConstraints.Add(newConstraint);
+            scheduling = new HeuristicRepairScheduling(singleConstraints, pairConstraints);
 
-        //        @Override
-        //        public ConstraintDecision check(ScheduledItem item1, ScheduledItem item2) {
-        //            ScheduledItem itemA = null;
-        //            ScheduledItem itemB = null;
-        //            if (item1.ItemToSchedule == unit1 && item2.ItemToSchedule == unit3) {
-        //                itemA = item1;
-        //                itemB = item2;
-        //            } else if (item2.ItemToSchedule == unit1 && item1.ItemToSchedule == unit3) {
-        //                itemA = item2;
-        //                itemB = item1;
-        //            } else if (item1.ItemToSchedule == unit4 && item2.ItemToSchedule == unit3) {
-        //                itemA = item1;
-        //                itemB = item2;
-        //            } else if (item2.ItemToSchedule == unit4 && item1.ItemToSchedule == unit3) {
-        //                itemA = item2;
-        //                itemB = item1;
-        //            }
+            SchedulePlan result = scheduling.Schedule(items, fixedItems);
 
-        //            if (itemA != null && itemB != null && (itemB.getStart() + itemB.ItemToSchedule.getMaxDuration()) > itemA.getStart()) {
-        //                return new ConstraintDecision(true, false, 100);
-        //            }
+            Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
+            Assert.AreEqual(300, result.Makespan);
+            Assert.IsTrue(AllConstraintsSatisfied(result));
+        }
 
-        //            return new ConstraintDecision(true, true, 0);
-        //        }
-        //    };
+internal class TestConstraint2 : AbstractPairConstraint<ScheduledItem>
+        {
+            internal ItemToSchedule unit1;
+            internal ItemToSchedule unit3;
+            internal ItemToSchedule unit4;
 
-        //    pairConstraints.Add(newConstraint);
-        //    manager = new ViolationsManager(singleConstraints, pairConstraints);
-        //    scheduling = new HeuristicRepairScheduling(manager);
+            protected override ConstraintDecision CheckConstraint(ScheduledItem item1, ScheduledItem item2)
+            {
+                ScheduledItem itemA = null;
+                    ScheduledItem itemB = null;
+                    if (item1.ItemToSchedule == unit1 && item2.ItemToSchedule == unit3) {
+                        itemA = item1;
+                        itemB = item2;
+                    } else if (item2.ItemToSchedule == unit1 && item1.ItemToSchedule == unit3) {
+                        itemA = item2;
+                        itemB = item1;
+                    } else if (item1.ItemToSchedule == unit4 && item2.ItemToSchedule == unit3) {
+                        itemA = item1;
+                        itemB = item2;
+                    } else if (item2.ItemToSchedule == unit4 && item1.ItemToSchedule == unit3) {
+                        itemA = item2;
+                        itemB = item1;
+                    }
 
-        //    SchedulePlan result = scheduling.Schedule(items, fixedItems);
+                    if (itemA != null && itemB != null && (itemB.Start + itemB.ItemToSchedule.MaxDuration) > itemA.Start) {
+                        return new ConstraintDecision(true, false, 100);
+                    }
 
-        //    Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
-        //    Assert.AreEqual(300, result.Makespan);
-        //    Assert.IsTrue(AllConstraintsSatisfied(result));
-        //}
+                    return new ConstraintDecision(true, true, 0);
+            }
+        }
     }
 }
