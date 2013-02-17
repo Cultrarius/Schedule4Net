@@ -1106,6 +1106,34 @@ namespace Schedule4NetTest
         }
 
         [TestMethod]
+        public void TestGenerateManyTestsTwice()
+        {
+            // Creates a large number of tests and tries to schedule them.
+            // The same tests are scheduled a second time to see if the result caching works as expected.
+            List<ScheduledItem> fixedItems = new List<ScheduledItem>();
+            List<ItemToSchedule> items = InitializeItemsToForTest(150, 1);
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            SchedulePlan firstResult = scheduling.Schedule(items, fixedItems);
+            sw.Stop();
+            long firstRun = sw.ElapsedMilliseconds;
+            sw.Reset();
+            sw.Start();
+            SchedulePlan secondResult = scheduling.Schedule(items, fixedItems);
+            sw.Stop();
+            long secondRun = sw.ElapsedMilliseconds;
+            CollectionAssert.AreEquivalent(firstResult.ScheduledItems, secondResult.ScheduledItems);
+            Assert.AreEqual(firstResult.Makespan, secondResult.Makespan);
+            Assert.IsTrue(AllConstraintsSatisfied(firstResult));
+            Assert.IsTrue(AllConstraintsSatisfied(secondResult));
+
+            // the second run should be much faster because the scheduler cached the previous result
+            Debug.WriteLine("First: " + firstRun + " Second: " + secondRun);
+            Assert.IsTrue(firstRun > (secondRun * 1.5));
+        }
+
+        [TestMethod]
         public void testHarderLocalOptimum1() {
             // This local optimum cannot be solved by using the dependencies, but the items must be shifted.
             List<ScheduledItem> fixedItems = new List<ScheduledItem>();
