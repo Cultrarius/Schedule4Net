@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Schedule4Net.Constraint;
+using Schedule4Net.Constraint.Impl;
 using Schedule4Net.Core;
 using Schedule4Net.Core.Exception;
 
@@ -25,13 +26,13 @@ namespace Schedule4Net
         /// After each successful movement operation the scheduler will take a snapshot of the current configuration of all the scheduled items.
         /// This property contains a list of these snapshots in a chronological order. This is very helpful for debugging and to visualize the workings of the scheduler.
         /// </summary>
-        public IList<IList<ScheduledItem>> Snapshots { get {return new List<IList<ScheduledItem>>(_snapshots); } }
-        
+        public IList<IList<ScheduledItem>> Snapshots { get { return new List<IList<ScheduledItem>>(_snapshots); } }
+
         /// <summary>
         /// Is true if the scheduler reuses the previous result to start the calculations with, false otherwise
         /// </summary>
         public bool CachingResultPlan { get; set; }
-        
+
         /// <summary>
         /// the number of backsteps the scheduler had to take while trying to solve the scheduling problem.
         /// This property is only interesting for debug reasons, so do not bother with it.
@@ -59,7 +60,34 @@ namespace Schedule4Net
             : this(new ViolationsManager(singleConstraints, pairConstraints))
         {
         }
-        
+
+        /// <summary>
+        /// Creates a new instance of the scheduler using the following standard constraints:
+        /// - StartNowConstraint: scheduled items start as soon as possible
+        /// - NoOverlappingConstraint: the times of scheduled items must not overlap on a single lane
+        /// - DependenciesConstraint: checks if any <see cref="ItemToSchedule"/> is dependent on other items
+        /// </summary>
+        public HeuristicRepairScheduling()
+            : this(new ViolationsManager(new List<SingleItemConstraint>
+                {
+                    new StartNowConstraint()
+                }, new List<ItemPairConstraint>
+                {
+                    new NoOverlappingConstraint(),
+                    new DependenciesConstraint()
+                }))
+        {
+            IEnumerable<SingleItemConstraint> singleConstraints = new List<SingleItemConstraint>
+                {
+                    new StartNowConstraint()
+                };
+            IEnumerable<ItemPairConstraint> pairConstraints = new List<ItemPairConstraint>
+                {
+                    new NoOverlappingConstraint(),
+                    new DependenciesConstraint()
+                };
+        }
+
 
         /// <summary>
         /// The main entry point for scheduling. This method will move all items provided as parameters as it sees fit to create a schedule.

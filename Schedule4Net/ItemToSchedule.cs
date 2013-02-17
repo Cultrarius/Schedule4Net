@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Schedule4Net.Constraint.Impl;
 
 namespace Schedule4Net
 {
@@ -73,7 +74,7 @@ namespace Schedule4Net
         /// </summary>
         /// <param name="id">The unique id of the item.</param>
         /// <param name="durations">The duration that this item requires on each lane.</param>
-        /// <param name="requiredItems">The items that are required by this item. This parameter can be used by some constraints and to create a good start configuration of the plan.</param>
+        /// <param name="requiredItems">The items that are required by this item. This parameter can be used by some constraints (e.g. <see cref="DependenciesConstraint"/>) and to create a good start configuration of the plan.</param>
         /// <exception cref="System.ArgumentException">
         /// This exception is raised if one of the following is true:
         /// - durations is null or empty
@@ -103,6 +104,20 @@ namespace Schedule4Net
                 }
                 DurationSummary += duration;
             }
+        }
+
+        /// <summary>
+        /// Creates a new item.
+        /// </summary>
+        /// <param name="id">The unique id of the item.</param>
+        /// <param name="durations">The duration that this item requires on each lane.</param>
+        /// <exception cref="System.ArgumentException">
+        /// This exception is raised if one of the following is true:
+        /// - durations is null or empty
+        /// - one of the durations is smaller or equal to 0
+        /// </exception>
+        public ItemToSchedule(int id, IDictionary<Lane, int> durations) : this(id, durations, new List<ItemToSchedule>(0))
+        {
         }
 
         /// <summary>
