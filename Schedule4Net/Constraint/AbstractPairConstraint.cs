@@ -19,7 +19,6 @@ namespace Schedule4Net.Constraint
 
         public virtual bool NeedsChecking(ItemToSchedule item1, ItemToSchedule item2)
         {
-
             return item1.GetType() == item2.GetType();
         }
 

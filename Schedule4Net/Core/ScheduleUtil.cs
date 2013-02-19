@@ -5,7 +5,7 @@ namespace Schedule4Net.Core
     /// <summary>
     /// This utility-class provides some static methods that are used by various parts of the scheduling algorithm.
     /// </summary>
-    internal class ScheduleUtil
+    public class ScheduleUtil
     {
         private ScheduleUtil() { }
 
