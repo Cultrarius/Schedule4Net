@@ -4,7 +4,12 @@ using Schedule4Net.Core;
 
 namespace Schedule4Net.Constraint.Impl
 {
-    public class NoOverlappingConstraint : ItemPairConstraint
+    /// <summary>
+    /// This constraint prevents items on the same lane to overlap each other. Without this constraint the scheduler will likely force items on top of each other.
+    /// 
+    /// This is a hard constraint.
+    /// </summary>
+    public sealed class NoOverlappingConstraint : ItemPairConstraint
     {
         public ConstraintDecision Check(ScheduledItem item1, ScheduledItem item2)
         {

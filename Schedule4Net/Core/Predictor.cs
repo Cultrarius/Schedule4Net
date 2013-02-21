@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Schedule4Net.Core
 {
-    class Predictor
+    internal class Predictor
     {
         private readonly IDictionary<ItemToSchedule, ISet<ViolationsManager.ConstraintPartner>> _constraintMap;
         private readonly IDictionary<ItemToSchedule, PredictionData> _predictionMap;

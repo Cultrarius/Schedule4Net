@@ -1,6 +1,6 @@
 ﻿namespace Schedule4Net.Constraint
 {
-    public class ConstraintPrediction
+    public sealed class ConstraintPrediction
     {
         public Prediction ConflictsWhenBefore { get; private set; }
         public Prediction ConflictsWhenTogether { get; private set; }

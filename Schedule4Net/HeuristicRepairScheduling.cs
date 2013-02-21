@@ -77,15 +77,6 @@ namespace Schedule4Net
                     new DependenciesConstraint()
                 }))
         {
-            IEnumerable<SingleItemConstraint> singleConstraints = new List<SingleItemConstraint>
-                {
-                    new StartNowConstraint()
-                };
-            IEnumerable<ItemPairConstraint> pairConstraints = new List<ItemPairConstraint>
-                {
-                    new NoOverlappingConstraint(),
-                    new DependenciesConstraint()
-                };
         }
 
 
@@ -229,12 +220,12 @@ namespace Schedule4Net
 
         private void TryToMoveRequiredItems(Violator violator)
         {
-            SchedulePlan newPlan = _plan.Clone() as SchedulePlan;
+            var newPlan = _plan.Clone() as SchedulePlan;
             if (newPlan == null) { throw new SchedulingException("Unable to copy schedule plan!"); }
             IDictionary<ItemToSchedule, DependencyNode> dependencyLevels = new Dictionary<ItemToSchedule, DependencyNode>();
             AddToTree(violator.ScheduledItem.ItemToSchedule, dependencyLevels, newPlan, 0);
 
-            using (C5.TreeSet<DependencyNode> dependencyTree = new C5.TreeSet<DependencyNode>())
+            using (var dependencyTree = new C5.TreeSet<DependencyNode>())
             {
                 dependencyTree.AddAll(dependencyLevels.Values);
 
@@ -249,7 +240,7 @@ namespace Schedule4Net
                     ScheduledItem bestItem = null;
                     foreach (int possibleStart in newPlan.StartValues)
                     {
-                        ScheduledItem newItem = new ScheduledItem(dependencyNode.ScheduledItem.ItemToSchedule,
+                        var newItem = new ScheduledItem(dependencyNode.ScheduledItem.ItemToSchedule,
                                                                   possibleStart);
                         ViolatorValues violatorValues = _violationsManager.CheckViolationsForItem(newItem, newPlan);
                         if (bestValues == null
@@ -336,7 +327,7 @@ namespace Schedule4Net
             /*
              * shift the complete plan to the rigth and move the items to the left (before the start of the current plan)
              */
-            SchedulePlan toStartPlan = _plan.Clone() as SchedulePlan;
+            var toStartPlan = _plan.Clone() as SchedulePlan;
             if (toStartPlan == null) { throw new SchedulingException("Unable to copy schedule plan!"); }
             toStartPlan.ShiftAll(_plan.Makespan);
             ISet<ScheduledItem> items = new HashSet<ScheduledItem>();
@@ -352,7 +343,7 @@ namespace Schedule4Net
             /*
              * move the items to the rigth (to the end of the current plan)
              */
-            SchedulePlan toEndPlan = _plan.Clone() as SchedulePlan;
+            var toEndPlan = _plan.Clone() as SchedulePlan;
             ISet<ScheduledItem> items = new HashSet<ScheduledItem>();
             items.Add(violator.ScheduledItem);
 

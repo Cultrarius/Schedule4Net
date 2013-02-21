@@ -3,6 +3,11 @@ using Schedule4Net.Core;
 
 namespace Schedule4Net.Constraint.Impl
 {
+    /// <summary>
+    /// This constraint ensures that item-dependencies are met by the scheduler. The dependencies are given by the <see cref="ItemToSchedule"/>'s <c>RequiredItems</c> property.
+    /// 
+    /// This is a hard constraint.
+    /// </summary>
     public sealed class DependenciesConstraint : ItemPairConstraint
     {
         public ConstraintDecision Check(ScheduledItem item1, ScheduledItem item2)

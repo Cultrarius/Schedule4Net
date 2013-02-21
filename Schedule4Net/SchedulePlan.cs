@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace Schedule4Net
 {
+    /// <summary>
+    /// This represents a finished schedule as it is created by the scheduler.
+    /// </summary>
     public sealed class SchedulePlan : ICloneable
     {
         private readonly IDictionary<int, ScheduledItem> _scheduledItems;
@@ -11,13 +14,22 @@ namespace Schedule4Net
         private readonly IDictionary<ItemToSchedule, ICollection<ItemToSchedule>> _dependentItems;
         private readonly ISet<ScheduledItem> _fixedItems;
 
+        /// <summary>
+        /// The scheduled items that make up this schedule plan.
+        /// </summary>
         public List<ScheduledItem> ScheduledItems
         {
             get { return new List<ScheduledItem>(_scheduledItems.Values); }
         }
 
-        public int Makespan { get; set; }
+        /// <summary>
+        /// The makespan is the total timespan from the beginning to the end of the schedule plan.
+        /// </summary>
+        public int Makespan { get; internal set; }
 
+        /// <summary>
+        /// The fixed items are items that are not moved by the scheduler.
+        /// </summary>
         public ISet<ScheduledItem> FixedItems
         {
             get { return new HashSet<ScheduledItem>(_fixedItems); }
@@ -31,6 +43,9 @@ namespace Schedule4Net
             }
         }
 
+        /// <summary>
+        /// Initializes a new empty plan.
+        /// </summary>
         public SchedulePlan()
         {
             _scheduledItems = new Dictionary<int, ScheduledItem>();
@@ -54,7 +69,14 @@ namespace Schedule4Net
             }
         }
 
-        public ScheduledItem Add(ItemToSchedule itemToSchedule, int start)
+        /// <summary>
+        /// Adds the specified <see cref="ItemToSchedule"/> to the schedule plan and returns the created <see cref="ScheduledItem"/>.
+        /// </summary>
+        /// <param name="itemToSchedule">The item to add to the plan.</param>
+        /// <param name="start">The start time of the added item. A value of 0 adds the item at the start of the plan.</param>
+        /// <returns>The <see cref="ScheduledItem"/> created by adding the specified item to the plan.</returns>
+        /// <exception cref="System.ArgumentException">The item is already present in the plan.</exception>
+        internal ScheduledItem Add(ItemToSchedule itemToSchedule, int start)
         {
             if (_scheduledItems.ContainsKey(itemToSchedule.Id))
             {
@@ -74,22 +96,36 @@ namespace Schedule4Net
                 Makespan = start + itemToSchedule.GetDuration(lane);
             }
 
-            ScheduledItem scheduledItem = new ScheduledItem(itemToSchedule, start);
+            var scheduledItem = new ScheduledItem(itemToSchedule, start);
             _scheduledItems.Add(scheduledItem.ItemToSchedule.Id, scheduledItem);
             AddToStartValues(scheduledItem);
             return scheduledItem;
         }
 
-        public void FixateItem(ScheduledItem itemToFixate)
+        /// <summary>
+        /// Fixates the given item in the schedule. This prevents the scheduler from maving this item around during scheduling.
+        /// </summary>
+        /// <param name="itemToFixate">The <see cref="ScheduledItem"/> to fixate in the plan.</param>
+        /// <exception cref="System.ArgumentException">The plan does not contain the provided <see cref="ScheduledItem"/></exception>
+        /// <remarks>If two fixated items violate a constraint then the scheduler is unable to create a schedule, so be careful with this method.</remarks>
+        internal void FixateItem(ScheduledItem itemToFixate)
         {
             if (!_scheduledItems.Values.Contains(itemToFixate))
             {
                 throw new ArgumentException("The plan does not contain this scheduled item (start value error): " + itemToFixate);
             }
+            _fixedItems.Remove(itemToFixate);
             _fixedItems.Add(itemToFixate);
         }
 
-        public bool CanBeMoved(ScheduledItem itemToMove)
+        /// <summary>
+        /// Determines whether the given item can be moved around in the schedule plan or not.
+        /// </summary>
+        /// <param name="itemToMove">The item to check.</param>
+        /// <returns>
+        ///   <c>true</c> if the item can be moved around or is not present in the plan; otherwise, <c>false</c>.
+        /// </returns>
+        internal bool CanBeMoved(ScheduledItem itemToMove)
         {
             return !_fixedItems.Contains(itemToMove);
         }
@@ -138,7 +174,7 @@ namespace Schedule4Net
             }
         }
 
-        public ScheduledItem MoveScheduledItem(ItemToSchedule itemToMove, int newStart)
+        internal ScheduledItem MoveScheduledItem(ItemToSchedule itemToMove, int newStart)
         {
             int itemId = itemToMove.Id;
             if (!_scheduledItems.ContainsKey(itemId))
@@ -169,7 +205,7 @@ namespace Schedule4Net
             return "Scheduling Plan: " + _scheduledItems;
         }
 
-        public void ShiftAll(int shiftValue)
+        internal void ShiftAll(int shiftValue)
         {
             // TODO: check if the shift leads to negative values
             IDictionary<int, ScheduledItem> newScheduledItems = new Dictionary<int, ScheduledItem>();
@@ -206,9 +242,9 @@ namespace Schedule4Net
             UpdateMakespan();
         }
 
-        public C5.IntervalHeap<ScheduledItem> GetDependentItems(ItemToSchedule item)
+        internal C5.IntervalHeap<ScheduledItem> GetDependentItems(ItemToSchedule item)
         {
-            C5.IntervalHeap<ScheduledItem> dependent = new C5.IntervalHeap<ScheduledItem>();
+            var dependent = new C5.IntervalHeap<ScheduledItem>();
             if (_dependentItems.ContainsKey(item))
             {
                 IEnumerable<ItemToSchedule> items = _dependentItems[item];
@@ -224,12 +260,17 @@ namespace Schedule4Net
             return dependent;
         }
 
+        /// <summary>
+        /// Returns the <see cref="ScheduledItem"/> in this plan that contains the given <see cref="ItemToSchedule"/>.
+        /// </summary>
+        /// <param name="item">The item the schedule plan contains.</param>
+        /// <returns>The corresponding scheduled item or <c>null</c> if the item is not present in the plan.</returns>
         public ScheduledItem GetScheduledItem(ItemToSchedule item)
         {
             return _scheduledItems.ContainsKey(item.Id) ? _scheduledItems[item.Id] : null;
         }
 
-        public void Unschedule(ScheduledItem scheduledItem)
+        internal void Unschedule(ScheduledItem scheduledItem)
         {
             if (_fixedItems.Contains(scheduledItem))
             {
@@ -254,7 +295,7 @@ namespace Schedule4Net
             }
         }
 
-        public void Schedule(ScheduledItem scheduledItem)
+        internal void Schedule(ScheduledItem scheduledItem)
         {
             AddToStartValues(scheduledItem);
             _scheduledItems.Add(scheduledItem.ItemToSchedule.Id, scheduledItem);

@@ -2,7 +2,7 @@
 
 namespace Schedule4Net.Constraint
 {
-    public abstract class AbstractSingleConstraint<T> : SingleItemConstraint where T : ItemToSchedule
+    public abstract class AbstractSingleConstraint<T> : SingleItemConstraint where T : ScheduledItem
     {
         public ConstraintDecision Check(ScheduledItem item)
         {
@@ -11,9 +11,9 @@ namespace Schedule4Net.Constraint
             {
                 throw new ArgumentNullException("Unable to cast provided item to desired type " + typeof(T));
             }
-            return Check(it);
+            return CheckConstraint(it);
         }
 
-        protected abstract ConstraintDecision Check(T item);
+        protected abstract ConstraintDecision CheckConstraint(T item);
     }
 }

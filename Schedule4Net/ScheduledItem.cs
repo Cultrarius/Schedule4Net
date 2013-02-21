@@ -52,7 +52,7 @@ namespace Schedule4Net
         /// </summary>
         /// <param name="newStart">The new start time of the scheduled item.</param>
         /// <returns>A new scheduled item like this one, but with a new start value</returns>
-        public ScheduledItem ChangeStart(int newStart)
+        internal ScheduledItem ChangeStart(int newStart)
         {
             return new ScheduledItem(ItemToSchedule, newStart);
         }
