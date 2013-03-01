@@ -53,7 +53,7 @@ namespace Schedule4NetTest
                                                                    new List<ItemPairConstraint>());
 
             //manager = new ViolationsManager(singleConstraints, pairConstraints);
-            scheduling = new HeuristicRepairScheduling(singleConstraints, pairConstraints);
+            scheduling = new HeuristicRepairScheduling(singleConstraints, pairConstraints) {ParllelScheduling = true};
         }
 
         //

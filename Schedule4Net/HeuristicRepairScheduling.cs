@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Schedule4Net.Constraint;
 using Schedule4Net.Constraint.Impl;
 using Schedule4Net.Core;
 using Schedule4Net.Core.Exception;
+using System.Threading.Tasks;
 
 namespace Schedule4Net
 {
@@ -21,6 +23,7 @@ namespace Schedule4Net
         private readonly ViolationsManager _violationsManager;
         private readonly ConfigurationsManager _configurationsManager;
         private readonly List<IList<ScheduledItem>> _snapshots;
+        private ConcurrentQueue<SchedulePlan> _planQueue;
 
         /// <summary>
         /// After each successful movement operation the scheduler will take a snapshot of the current configuration of all the scheduled items.
@@ -38,6 +41,13 @@ namespace Schedule4Net
         /// This property is only interesting for debug reasons, so do not bother with it.
         /// </summary>
         public int Backsteps { get; private set; }
+
+        /// <summary>
+        /// If <c>true</c> then the scheduler will try to schedule independent clusters of <see cref="ItemToSchedule"/> separately from one another.
+        /// The constraints used by the scheduler _must_ be thread-safe if this feature is used.
+        /// Also note that the result may vary from non-parallel scheduling since the input-order of items is not preserved.
+        /// </summary>
+        public bool ParllelScheduling { get; set; }
 
         /// <summary>
         /// Creates a new instance of the scheduler using the constraints of the given <see cref="ViolationsManager"/>.
@@ -104,8 +114,100 @@ namespace Schedule4Net
             CreateStartPlan(itemsToSchedule, fixedItems);
             if (itemsToSchedule.Count == 0) return _plan;
             _violationsManager.Initialize(_plan);
-            SatisfyConstraints();
+            if (ParllelScheduling)
+            {
+                SchedulePlanInParallel();
+            }
+            else
+            {
+                SatisfyConstraints();
+            }
             return _plan;
+        }
+
+        private void SchedulePlanInParallel()
+        {
+            ISet<ISet<ItemToSchedule>> clusters = FindClusters();
+            if (clusters.Count == 1)
+            {
+                // they are all connected anyway, so no need to make unnecessary overhead; just schedule them sequentially
+                SatisfyConstraints();
+            }
+            else
+            {
+                _planQueue = new ConcurrentQueue<SchedulePlan>();
+                try
+                {
+                    Parallel.ForEach(clusters, ScheduleCluster);
+                }
+                catch (AggregateException e)
+                {
+                    throw new SchedulingException("An Exception occured during the parallel scheduling", e);
+                }
+                MergeResultPlans();
+            }
+        }
+
+        private void MergeResultPlans()
+        {
+            _plan = new SchedulePlan();
+            SchedulePlan plan;
+            while (_planQueue.TryDequeue(out plan))
+            {
+                foreach (ScheduledItem scheduledItem in plan.ScheduledItems)
+                {
+                    _plan.Schedule(scheduledItem);
+                }
+            }
+        }
+
+        private void ScheduleCluster(ISet<ItemToSchedule> cluster)
+        {
+            var scheduler = new HeuristicRepairScheduling(_violationsManager.SingleConstraints, _violationsManager.PairConstraints)
+                {
+                    CachingResultPlan = CachingResultPlan,
+                    ParllelScheduling = false,
+                    _plan = _plan // set the plan in case of caching
+                };
+            var fixedCluster = new List<ScheduledItem>();
+            foreach (ScheduledItem fixedItem in _plan.FixedItems)
+            {
+                if (!cluster.Contains(fixedItem.ItemToSchedule)) continue;
+                cluster.Remove(fixedItem.ItemToSchedule);
+                fixedCluster.Add(fixedItem);
+            }
+            _planQueue.Enqueue(scheduler.Schedule(new List<ItemToSchedule>(cluster), fixedCluster));
+        }
+
+        private ISet<ISet<ItemToSchedule>> FindClusters()
+        {
+            ISet<ISet<ItemToSchedule>> clusters = new HashSet<ISet<ItemToSchedule>>();
+            foreach (ItemToSchedule item in _violationsManager.ConstraintMap.Keys)
+            {
+                if (IsAlreadyInCluster(item, clusters)) continue;
+                ISet<ItemToSchedule> cluster = new HashSet<ItemToSchedule>();
+                AddToCluster(cluster, item);
+                if (!clusters.Add(cluster))
+                {
+                    throw new SchedulingException("Unable to add cluster! " + cluster);
+                }
+            }
+            return clusters;
+        }
+
+        private void AddToCluster(ISet<ItemToSchedule> cluster, ItemToSchedule item)
+        {
+            cluster.Add(item);
+            foreach (ViolationsManager.ConstraintPartner partner in _violationsManager.ConstraintMap[item])
+            {
+                if (cluster.Contains(partner.PartnerItem)) continue;
+                AddToCluster(cluster, partner.PartnerItem);
+            }
+        }
+
+        private static bool IsAlreadyInCluster(ItemToSchedule item, IEnumerable<ISet<ItemToSchedule>> clusters)
+        {
+            return clusters.Any(cluster => cluster.Contains(item));
         }
 
         /// <summary>
@@ -443,6 +545,7 @@ namespace Schedule4Net
                 foreach (ScheduledItem oldScheduledItem in oldScheduledItems)
                 {
                     ItemToSchedule oldItem = oldScheduledItem.ItemToSchedule;
+                    if (!newItemsMap.ContainsKey(oldItem.Id)) continue;
                     ItemToSchedule newItem = newItemsMap[oldItem.Id];
                     if (!oldItem.Equals(newItem)) continue;
                     ScheduledItem scheduledItem = _plan.Add(newItem, oldScheduledItem.Start);

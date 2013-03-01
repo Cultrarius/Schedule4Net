@@ -52,6 +52,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="HeuristicRepairSchedulingTest.cs" />
+    <Compile Include="ParallelHeuristicRepairSchedulingTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
