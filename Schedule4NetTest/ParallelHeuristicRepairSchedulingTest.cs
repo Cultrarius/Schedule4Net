@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Schedule4Net;
 using Schedule4Net.Constraint;
@@ -9,7 +10,7 @@ using Schedule4Net.Core.Exception;
 namespace Schedule4NetTest
 {
     [TestClass]
-    public class HeuristicRepairSchedulingTest
+    public class PrallelHeuristicRepairSchedulingTest
     {
         private HeuristicRepairScheduling scheduling;
         //private ViolationsManager manager;
@@ -53,7 +54,7 @@ namespace Schedule4NetTest
                                                                    new List<ItemPairConstraint>());
 
             //manager = new ViolationsManager(singleConstraints, pairConstraints);
-            scheduling = new HeuristicRepairScheduling(singleConstraints, pairConstraints) {ParllelScheduling = true};
+            scheduling = new HeuristicRepairScheduling(singleConstraints, pairConstraints) { ParllelScheduling = true };
         }
 
         //
@@ -410,11 +411,10 @@ namespace Schedule4NetTest
             durations.Add(new Lane(3), 200);
             items.Add(new ItemToSchedule(22, durations, new List<ItemToSchedule>()));
 
-            scheduling.ParllelScheduling = false;
             SchedulePlan result = scheduling.Schedule(items, fixedItems);
 
             Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
-            Assert.AreEqual(600, result.Makespan);
+            Assert.IsTrue(result.Makespan <= 800);
             Assert.IsTrue(AllConstraintsSatisfied(result));
         }
 
@@ -1134,8 +1134,79 @@ namespace Schedule4NetTest
             Assert.IsTrue(firstRun > (secondRun * 1.5));
         }
 
+        private IEnumerable<ItemToSchedule> CreateTestCluster(int itemCount, int itemsPerLane, int startLane)
+        {
+            var rand = new Random(startLane);
+            ISet<ItemToSchedule> cluster = new HashSet<ItemToSchedule>();
+            int lane = startLane;
+            ISet<ItemToSchedule> previousItems = new HashSet<ItemToSchedule>();
+            ISet<ItemToSchedule> currentItems = new HashSet<ItemToSchedule>();
+            for (int i = 1; i <= itemCount; i += itemsPerLane)
+            {
+                currentItems.Clear();
+                for (int k = 0; k < itemsPerLane; k++)
+                {
+                    IDictionary<Lane, int> durations = new Dictionary<Lane, int>();
+                    durations.Add(new Lane(lane), 100);
+                    var item = new ItemToSchedule(rand.Next(int.MaxValue), durations, previousItems);
+                    currentItems.Add(item);
+                    cluster.Add(item);
+                }
+                lane++;
+                previousItems = new HashSet<ItemToSchedule>(currentItems);
+            }
+            return cluster;
+        }
+
         [TestMethod]
-        public void testHarderLocalOptimum1() {
+        public void TestGenerateManyClusters1()
+        {
+            // Creates a large number of clusters and tries to schedule them. This should not make too many problems as there is just one item per lane.
+            List<ScheduledItem> fixedItems = new List<ScheduledItem>();
+            List<ItemToSchedule> items = new List<ItemToSchedule>(CreateTestCluster(9, 3, 1));
+            items.AddRange(CreateTestCluster(12, 3, 10));
+            items.AddRange(CreateTestCluster(12, 4, 20));
+
+            scheduling = new HeuristicRepairScheduling( new List<SingleItemConstraint> { new StartNowConstraint() },
+                                                        new List<ItemPairConstraint> { new DependenciesConstraint(), new NoOverlappingConstraint() })
+                                                        { ParllelScheduling = true };
+            SchedulePlan result = scheduling.Schedule(items, fixedItems);
+
+            Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
+            Assert.IsTrue(AllConstraintsSatisfied(result));
+        }
+
+        //[TestMethod]
+        //public void TestGenerateManyTestsTwice()
+        //{
+        //    // Creates a large number of tests and tries to schedule them.
+        //    // The same tests are scheduled a second time to see if the result caching works as expected.
+        //    List<ScheduledItem> fixedItems = new List<ScheduledItem>();
+        //    List<ItemToSchedule> items = InitializeItemsToForTest(150, 1);
+
+        //    Stopwatch sw = new Stopwatch();
+        //    sw.Start();
+        //    SchedulePlan firstResult = scheduling.Schedule(items, fixedItems);
+        //    sw.Stop();
+        //    long firstRun = sw.ElapsedMilliseconds;
+        //    sw.Reset();
+        //    sw.Start();
+        //    SchedulePlan secondResult = scheduling.Schedule(items, fixedItems);
+        //    sw.Stop();
+        //    long secondRun = sw.ElapsedMilliseconds;
+        //    CollectionAssert.AreEquivalent(firstResult.ScheduledItems, secondResult.ScheduledItems);
+        //    Assert.AreEqual(firstResult.Makespan, secondResult.Makespan);
+        //    Assert.IsTrue(AllConstraintsSatisfied(firstResult));
+        //    Assert.IsTrue(AllConstraintsSatisfied(secondResult));
+
+        //    // the second run should be much faster because the scheduler cached the previous result
+        //    Debug.WriteLine("First: " + firstRun + " Second: " + secondRun);
+        //    Assert.IsTrue(firstRun > (secondRun * 1.5));
+        //}
+
+        [TestMethod]
+        public void testHarderLocalOptimum1()
+        {
             // This local optimum cannot be solved by using the dependencies, but the items must be shifted.
             List<ScheduledItem> fixedItems = new List<ScheduledItem>();
             List<ItemToSchedule> items = new List<ItemToSchedule>();
@@ -1199,21 +1270,29 @@ namespace Schedule4NetTest
             {
                 ScheduledItem itemA = null;
                 ScheduledItem itemB = null;
-                if (item1.ItemToSchedule == unit1 && item2.ItemToSchedule == unit2) {
+                if (item1.ItemToSchedule == unit1 && item2.ItemToSchedule == unit2)
+                {
                     itemA = item1;
                     itemB = item2;
-                } else if (item2.ItemToSchedule == unit1 && item1.ItemToSchedule == unit2) {
+                }
+                else if (item2.ItemToSchedule == unit1 && item1.ItemToSchedule == unit2)
+                {
                     itemA = item2;
                     itemB = item1;
-                } else if (item1.ItemToSchedule == unit11 && item2.ItemToSchedule == unit22) {
+                }
+                else if (item1.ItemToSchedule == unit11 && item2.ItemToSchedule == unit22)
+                {
                     itemA = item1;
                     itemB = item2;
-                } else if (item2.ItemToSchedule == unit11 && item1.ItemToSchedule == unit22) {
+                }
+                else if (item2.ItemToSchedule == unit11 && item1.ItemToSchedule == unit22)
+                {
                     itemA = item2;
                     itemB = item1;
                 }
 
-                if (itemA != null && itemB != null && (itemA.Start + itemA.ItemToSchedule.MaxDuration) != itemB.Start) {
+                if (itemA != null && itemB != null && (itemA.Start + itemA.ItemToSchedule.MaxDuration) != itemB.Start)
+                {
                     return new ConstraintDecision(true, false, 100);
                 }
 
@@ -1222,7 +1301,8 @@ namespace Schedule4NetTest
         }
 
         [TestMethod]
-        public void testHarderLocalOptimum2() {
+        public void testHarderLocalOptimum2()
+        {
             // This local optimum cannot be solved by using the dependencies or a right-shift, but the items must be shifted
             // to the left.
             List<ScheduledItem> fixedItems = new List<ScheduledItem>();
@@ -1283,7 +1363,7 @@ namespace Schedule4NetTest
             Assert.IsTrue(AllConstraintsSatisfied(result));
         }
 
-internal class TestConstraint2 : AbstractPairConstraint<ScheduledItem>
+        internal class TestConstraint2 : AbstractPairConstraint<ScheduledItem>
         {
             internal ItemToSchedule unit1;
             internal ItemToSchedule unit3;
@@ -1292,26 +1372,34 @@ internal class TestConstraint2 : AbstractPairConstraint<ScheduledItem>
             protected override ConstraintDecision CheckConstraint(ScheduledItem item1, ScheduledItem item2)
             {
                 ScheduledItem itemA = null;
-                    ScheduledItem itemB = null;
-                    if (item1.ItemToSchedule == unit1 && item2.ItemToSchedule == unit3) {
-                        itemA = item1;
-                        itemB = item2;
-                    } else if (item2.ItemToSchedule == unit1 && item1.ItemToSchedule == unit3) {
-                        itemA = item2;
-                        itemB = item1;
-                    } else if (item1.ItemToSchedule == unit4 && item2.ItemToSchedule == unit3) {
-                        itemA = item1;
-                        itemB = item2;
-                    } else if (item2.ItemToSchedule == unit4 && item1.ItemToSchedule == unit3) {
-                        itemA = item2;
-                        itemB = item1;
-                    }
+                ScheduledItem itemB = null;
+                if (item1.ItemToSchedule == unit1 && item2.ItemToSchedule == unit3)
+                {
+                    itemA = item1;
+                    itemB = item2;
+                }
+                else if (item2.ItemToSchedule == unit1 && item1.ItemToSchedule == unit3)
+                {
+                    itemA = item2;
+                    itemB = item1;
+                }
+                else if (item1.ItemToSchedule == unit4 && item2.ItemToSchedule == unit3)
+                {
+                    itemA = item1;
+                    itemB = item2;
+                }
+                else if (item2.ItemToSchedule == unit4 && item1.ItemToSchedule == unit3)
+                {
+                    itemA = item2;
+                    itemB = item1;
+                }
 
-                    if (itemA != null && itemB != null && (itemB.Start + itemB.ItemToSchedule.MaxDuration) > itemA.Start) {
-                        return new ConstraintDecision(true, false, 100);
-                    }
+                if (itemA != null && itemB != null && (itemB.Start + itemB.ItemToSchedule.MaxDuration) > itemA.Start)
+                {
+                    return new ConstraintDecision(true, false, 100);
+                }
 
-                    return new ConstraintDecision(true, true, 0);
+                return new ConstraintDecision(true, true, 0);
             }
         }
     }
