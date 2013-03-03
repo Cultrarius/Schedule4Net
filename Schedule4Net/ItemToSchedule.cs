@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using Schedule4Net.Constraint.Impl;
 
 namespace Schedule4Net
@@ -154,7 +155,20 @@ namespace Schedule4Net
 
         public override String ToString()
         {
-            return "[id: " + Id + ", durations: " + Durations + ", required: " + RequiredItems + "]";
+            StringBuilder sb = new StringBuilder("[id: " + Id + ", durations: {");
+            foreach (Lane lane in _durations.Keys)
+            {
+                sb.Append(lane.Number + " => " + _durations[lane] + ", ");
+            }
+            if (_durations.Count > 0) sb.Remove(sb.Length - 2, 2);
+            sb.Append("}, requiredIds: [");
+            foreach (ItemToSchedule required in _requiredItems)
+            {
+                sb.Append(required.Id + ", ");
+            }
+            if (_requiredItems.Count > 0) sb.Remove(sb.Length - 2, 2);
+            sb.Append(']');
+            return  sb.ToString();
         }
     }
 }
