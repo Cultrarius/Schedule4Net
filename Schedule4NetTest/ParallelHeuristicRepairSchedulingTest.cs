@@ -69,10 +69,15 @@ namespace Schedule4NetTest
 
         private bool AllConstraintsSatisfied(SchedulePlan plan)
         {
+            return AllConstraintsSatisfied(plan, singleConstraints, pairConstraints);
+        }
+
+        private static bool AllConstraintsSatisfied(SchedulePlan plan, IList<SingleItemConstraint> testedSingleConstraints, IList<ItemPairConstraint> testedPairConstraints)
+        {
             List<ScheduledItem> scheduledItems = plan.ScheduledItems;
             foreach (ScheduledItem item1 in scheduledItems)
             {
-                foreach (SingleItemConstraint constraint in singleConstraints)
+                foreach (SingleItemConstraint constraint in testedSingleConstraints)
                 {
                     ConstraintDecision decision = constraint.Check(item1);
                     if (!decision.HardConstraint || decision.Fulfilled) continue;
@@ -87,7 +92,7 @@ namespace Schedule4NetTest
                         continue;
                     }
 
-                    foreach (ItemPairConstraint constraint in pairConstraints)
+                    foreach (ItemPairConstraint constraint in testedPairConstraints)
                     {
                         ConstraintDecision decision = constraint.Check(item1, item2);
                         if (!decision.HardConstraint || decision.Fulfilled) continue;
@@ -1136,7 +1141,7 @@ namespace Schedule4NetTest
 
         private IEnumerable<ItemToSchedule> CreateTestCluster(int itemCount, int itemsPerLane, int startLane)
         {
-            var rand = new Random(startLane);
+            int id = startLane;
             ISet<ItemToSchedule> cluster = new HashSet<ItemToSchedule>();
             int lane = startLane;
             ISet<ItemToSchedule> previousItems = new HashSet<ItemToSchedule>();
@@ -1148,7 +1153,7 @@ namespace Schedule4NetTest
                 {
                     IDictionary<Lane, int> durations = new Dictionary<Lane, int>();
                     durations.Add(new Lane(lane), 100);
-                    var item = new ItemToSchedule(rand.Next(int.MaxValue), durations, previousItems);
+                    var item = new ItemToSchedule(id++, durations, previousItems);
                     currentItems.Add(item);
                     cluster.Add(item);
                 }
@@ -1165,44 +1170,71 @@ namespace Schedule4NetTest
             List<ScheduledItem> fixedItems = new List<ScheduledItem>();
             List<ItemToSchedule> items = new List<ItemToSchedule>(CreateTestCluster(9, 3, 1));
             items.AddRange(CreateTestCluster(12, 3, 10));
-            items.AddRange(CreateTestCluster(12, 4, 20));
+            items.AddRange(CreateTestCluster(12, 4, 30));
+            items.AddRange(CreateTestCluster(15, 5, 50));
+            items.AddRange(CreateTestCluster(20, 4, 70));
+            items.AddRange(CreateTestCluster(40, 2, 100));
 
-            scheduling = new HeuristicRepairScheduling( new List<SingleItemConstraint> { new StartNowConstraint() },
-                                                        new List<ItemPairConstraint> { new DependenciesConstraint(), new NoOverlappingConstraint() })
-                                                        { ParllelScheduling = true };
+            List<ItemPairConstraint> testPairConstraints = new List<ItemPairConstraint> { new DependenciesConstraint(), new NoOverlappingConstraint() };
+            scheduling = new HeuristicRepairScheduling(singleConstraints, testPairConstraints) {ParllelScheduling = true};
             SchedulePlan result = scheduling.Schedule(items, fixedItems);
 
             Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
-            Assert.IsTrue(AllConstraintsSatisfied(result));
+            Assert.IsTrue(AllConstraintsSatisfied(result, singleConstraints, testPairConstraints));
         }
 
-        //[TestMethod]
-        //public void TestGenerateManyTestsTwice()
-        //{
-        //    // Creates a large number of tests and tries to schedule them.
-        //    // The same tests are scheduled a second time to see if the result caching works as expected.
-        //    List<ScheduledItem> fixedItems = new List<ScheduledItem>();
-        //    List<ItemToSchedule> items = InitializeItemsToForTest(150, 1);
+        [TestMethod]
+        public void TestGenerateManyClusters2()
+        {
+            // Creates a large number of clusters and tries to schedule them. This should not make too many problems as there is just one item per lane.
+            List<ScheduledItem> fixedItems = new List<ScheduledItem>();
+            List<ItemToSchedule> items = new List<ItemToSchedule>();
+            for (int i = 1; i < 200; i += 9)
+            {
+                items.AddRange(CreateTestCluster(9, 3, i));
+            }
 
-        //    Stopwatch sw = new Stopwatch();
-        //    sw.Start();
-        //    SchedulePlan firstResult = scheduling.Schedule(items, fixedItems);
-        //    sw.Stop();
-        //    long firstRun = sw.ElapsedMilliseconds;
-        //    sw.Reset();
-        //    sw.Start();
-        //    SchedulePlan secondResult = scheduling.Schedule(items, fixedItems);
-        //    sw.Stop();
-        //    long secondRun = sw.ElapsedMilliseconds;
-        //    CollectionAssert.AreEquivalent(firstResult.ScheduledItems, secondResult.ScheduledItems);
-        //    Assert.AreEqual(firstResult.Makespan, secondResult.Makespan);
-        //    Assert.IsTrue(AllConstraintsSatisfied(firstResult));
-        //    Assert.IsTrue(AllConstraintsSatisfied(secondResult));
+            List<ItemPairConstraint> testPairConstraints = new List<ItemPairConstraint> { new DependenciesConstraint(), new NoOverlappingConstraint() };
+            scheduling = new HeuristicRepairScheduling(singleConstraints, testPairConstraints) { ParllelScheduling = true };
+            SchedulePlan result = scheduling.Schedule(items, fixedItems);
 
-        //    // the second run should be much faster because the scheduler cached the previous result
-        //    Debug.WriteLine("First: " + firstRun + " Second: " + secondRun);
-        //    Assert.IsTrue(firstRun > (secondRun * 1.5));
-        //}
+            Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
+            Assert.IsTrue(AllConstraintsSatisfied(result, singleConstraints, testPairConstraints));
+        }
+
+        [TestMethod]
+        public void TestGenerateManyClustersScheduleTwice()
+        {
+            // Creates a large number of clusters and tries to schedule them. This should not make too many problems as there is just one item per lane.
+            List<ScheduledItem> fixedItems = new List<ScheduledItem>();
+            List<ItemToSchedule> items = new List<ItemToSchedule>();
+            for (int i = 1; i < 300; i += 9)
+            {
+                items.AddRange(CreateTestCluster(9, 3, i));
+            }
+
+            List<ItemPairConstraint> testPairConstraints = new List<ItemPairConstraint> { new DependenciesConstraint(), new NoOverlappingConstraint() };
+            scheduling = new HeuristicRepairScheduling(singleConstraints, testPairConstraints) { ParllelScheduling = true };
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            SchedulePlan firstResult = scheduling.Schedule(items, fixedItems);
+            sw.Stop();
+            long firstRun = sw.ElapsedMilliseconds;
+            sw.Reset();
+            sw.Start();
+            SchedulePlan secondResult = scheduling.Schedule(items, fixedItems);
+            sw.Stop();
+            long secondRun = sw.ElapsedMilliseconds;
+            CollectionAssert.AreEquivalent(firstResult.ScheduledItems, secondResult.ScheduledItems);
+            Assert.AreEqual(firstResult.Makespan, secondResult.Makespan);
+            Assert.IsTrue(AllConstraintsSatisfied(firstResult, singleConstraints, testPairConstraints));
+            Assert.IsTrue(AllConstraintsSatisfied(secondResult, singleConstraints, testPairConstraints));
+
+            // the second run should be much faster because the scheduler cached the previous result, even with parallel scheduling
+            Debug.WriteLine("First: " + firstRun + " Second: " + secondRun);
+            Assert.IsTrue(firstRun > (secondRun * 1.5));
+        }
 
         [TestMethod]
         public void testHarderLocalOptimum1()
