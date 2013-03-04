@@ -20,7 +20,7 @@ namespace Schedule4Net
     public class HeuristicRepairScheduling
     {
         private SchedulePlan _plan;
-        private readonly ViolationsManager _violationsManager;
+        internal readonly ViolationsManager ViolationsManager;
         private readonly ConfigurationsManager _configurationsManager;
         private readonly List<IList<ScheduledItem>> _snapshots;
         private ConcurrentQueue<SchedulePlan> _planQueue;
@@ -50,14 +50,14 @@ namespace Schedule4Net
         public bool ParllelScheduling { get; set; }
 
         /// <summary>
-        /// Creates a new instance of the scheduler using the constraints of the given <see cref="ViolationsManager"/>.
+        /// Creates a new instance of the scheduler using the constraints of the given <see cref="Core.ViolationsManager"/>.
         /// </summary>
         /// <param name="manager">The manager holding the constraints used to create all future schedules.</param>
         internal HeuristicRepairScheduling(ViolationsManager manager)
         {
             CachingResultPlan = true;
-            _violationsManager = manager;
-            _configurationsManager = new ConfigurationsManager(_violationsManager);
+            ViolationsManager = manager;
+            _configurationsManager = new ConfigurationsManager(ViolationsManager);
             _snapshots = new List<IList<ScheduledItem>>();
         }
 
@@ -113,7 +113,7 @@ namespace Schedule4Net
             _snapshots.Clear();
             CreateStartPlan(itemsToSchedule, fixedItems);
             if (itemsToSchedule.Count == 0) return _plan;
-            _violationsManager.Initialize(_plan);
+            ViolationsManager.Initialize(_plan);
             if (ParllelScheduling)
             {
                 SchedulePlanInParallel();
@@ -163,7 +163,7 @@ namespace Schedule4Net
 
         private void ScheduleCluster(ISet<ItemToSchedule> cluster)
         {
-            var scheduler = new HeuristicRepairScheduling(_violationsManager.SingleConstraints, _violationsManager.PairConstraints)
+            var scheduler = new HeuristicRepairScheduling(ViolationsManager.SingleConstraints, ViolationsManager.PairConstraints)
                 {
                     CachingResultPlan = CachingResultPlan,
                     ParllelScheduling = false,
@@ -182,7 +182,7 @@ namespace Schedule4Net
         private ISet<ISet<ItemToSchedule>> FindClusters()
         {
             ISet<ISet<ItemToSchedule>> clusters = new HashSet<ISet<ItemToSchedule>>();
-            foreach (ItemToSchedule item in _violationsManager.ConstraintMap.Keys)
+            foreach (ItemToSchedule item in ViolationsManager.ConstraintMap.Keys)
             {
                 if (IsAlreadyInCluster(item, clusters)) continue;
                 ISet<ItemToSchedule> cluster = new HashSet<ItemToSchedule>();
@@ -198,7 +198,7 @@ namespace Schedule4Net
         private void AddToCluster(ISet<ItemToSchedule> cluster, ItemToSchedule item)
         {
             cluster.Add(item);
-            foreach (ViolationsManager.ConstraintPartner partner in _violationsManager.ConstraintMap[item])
+            foreach (ViolationsManager.ConstraintPartner partner in ViolationsManager.ConstraintMap[item])
             {
                 if (cluster.Contains(partner.PartnerItem)) continue;
                 AddToCluster(cluster, partner.PartnerItem);
@@ -216,7 +216,7 @@ namespace Schedule4Net
         private void SatisfyConstraints()
         {
             bool hardConstraintsSatisfied = false;
-            Violator violator = _violationsManager.GetBiggestViolator(null);
+            Violator violator = ViolationsManager.GetBiggestViolator(null);
 
             if (violator != null && violator.HardViolationsValue == 0)
             {
@@ -252,7 +252,7 @@ namespace Schedule4Net
                 {
                     _configurationsManager.ApplyReferenceConfiguration(_plan);
                     Backsteps++;
-                    violator = _violationsManager.GetBiggestViolator(violator);
+                    violator = ViolationsManager.GetBiggestViolator(violator);
 
                     if (violator == null && hardConstraintsSatisfied)
                     {
@@ -277,7 +277,7 @@ namespace Schedule4Net
                 }
 
                 _snapshots.Add(_plan.ScheduledItems);
-                violator = _violationsManager.GetBiggestViolator(null);
+                violator = ViolationsManager.GetBiggestViolator(null);
                 if (violator == null || (!hardConstraintsSatisfied && violator.HardViolationsValue == 0))
                 {
                     hardConstraintsSatisfied = true;
@@ -292,7 +292,7 @@ namespace Schedule4Net
         /// <exception cref="SchedulingException">If unable to esacape from a local optimum.</exception>
         private void EscapeFromLocalOptimum()
         {
-            Violator violator = _violationsManager.GetBiggestViolator(null);
+            Violator violator = ViolationsManager.GetBiggestViolator(null);
             _configurationsManager.ResetPlanConfigurations();
             _configurationsManager.AddPlanConfiguration(_plan);
 
@@ -315,7 +315,7 @@ namespace Schedule4Net
                     "Unable to esacape from local optimum in scheduling plan. The scheduling can not be completed! Plan: " + _plan);
             }
 
-            _violationsManager.PlanHasBeenUpdated(_plan, bestPlan);
+            ViolationsManager.PlanHasBeenUpdated(_plan, bestPlan);
             _plan = bestPlan;
 
         }
@@ -344,7 +344,7 @@ namespace Schedule4Net
                     {
                         var newItem = new ScheduledItem(dependencyNode.ScheduledItem.ItemToSchedule,
                                                                   possibleStart);
-                        ViolatorValues violatorValues = _violationsManager.CheckViolationsForItem(newItem, newPlan);
+                        ViolatorValues violatorValues = ViolationsManager.CheckViolationsForItem(newItem, newPlan);
                         if (bestValues == null
                             || (violatorValues.HardViolationsValue < bestValues.HardViolationsValue)
                             ||
@@ -459,7 +459,7 @@ namespace Schedule4Net
 
             // retrieve all items which items are violated rigth now by the items to shift
             ISet<ScheduledItem> violatedItems = new HashSet<ScheduledItem>();
-            foreach (ScheduledItem itemToAdd in items.SelectMany(itemToShift => _violationsManager.GetHardViolatedItems(itemToShift, toEndPlan)))
+            foreach (ScheduledItem itemToAdd in items.SelectMany(itemToShift => ViolationsManager.GetHardViolatedItems(itemToShift, toEndPlan)))
             {
                 violatedItems.Add(itemToAdd);
             }
@@ -476,7 +476,7 @@ namespace Schedule4Net
 
             // check which items are violated after the shift
             ISet<ScheduledItem> newViolatedItems = new HashSet<ScheduledItem>();
-            foreach (ScheduledItem itemToAdd in shiftedItems.SelectMany(shiftedItem => _violationsManager.GetHardViolatedItems(shiftedItem, toEndPlan)))
+            foreach (ScheduledItem itemToAdd in shiftedItems.SelectMany(shiftedItem => ViolationsManager.GetHardViolatedItems(shiftedItem, toEndPlan)))
             {
                 newViolatedItems.Add(itemToAdd);
             }
