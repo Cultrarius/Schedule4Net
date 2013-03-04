@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Schedule4Net;
 using System.Windows.Shapes;
 using Schedule4Net.Core;
 
-namespace ScheduleViewer
+namespace Schedule4Net.Viewer
 {
     public class ScheduleCanvas : Canvas
     {
