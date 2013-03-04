@@ -17,7 +17,7 @@ namespace Schedule4Net
     /// It is not guaranteed to find a solution if one exists, nor is it guaranteed to do so fast.
     /// But for most cases, this algorithm performs a lot better than classical search algorithms.
     /// </summary>
-    public class HeuristicRepairScheduling
+    public class Scheduler
     {
         private SchedulePlan _plan;
         internal readonly ViolationsManager ViolationsManager;
@@ -53,7 +53,7 @@ namespace Schedule4Net
         /// Creates a new instance of the scheduler using the constraints of the given <see cref="Core.ViolationsManager"/>.
         /// </summary>
         /// <param name="manager">The manager holding the constraints used to create all future schedules.</param>
-        internal HeuristicRepairScheduling(ViolationsManager manager)
+        internal Scheduler(ViolationsManager manager)
         {
             CachingResultPlan = true;
             ViolationsManager = manager;
@@ -66,7 +66,7 @@ namespace Schedule4Net
         /// </summary>
         /// <param name="singleConstraints">All the constraints that apply to single items.</param>
         /// <param name="pairConstraints">All the constraints that apply to a pair of items.</param>
-        public HeuristicRepairScheduling(IEnumerable<SingleItemConstraint> singleConstraints, IEnumerable<ItemPairConstraint> pairConstraints)
+        public Scheduler(IEnumerable<SingleItemConstraint> singleConstraints, IEnumerable<ItemPairConstraint> pairConstraints)
             : this(new ViolationsManager(singleConstraints, pairConstraints))
         {
         }
@@ -77,7 +77,7 @@ namespace Schedule4Net
         /// - NoOverlappingConstraint: the times of scheduled items must not overlap on a single lane
         /// - DependenciesConstraint: checks if any <see cref="ItemToSchedule"/> is dependent on other items
         /// </summary>
-        public HeuristicRepairScheduling()
+        public Scheduler()
             : this(new ViolationsManager(new List<SingleItemConstraint>
                 {
                     new StartNowConstraint()
@@ -163,7 +163,7 @@ namespace Schedule4Net
 
         private void ScheduleCluster(ISet<ItemToSchedule> cluster)
         {
-            var scheduler = new HeuristicRepairScheduling(ViolationsManager.SingleConstraints, ViolationsManager.PairConstraints)
+            var scheduler = new Scheduler(ViolationsManager.SingleConstraints, ViolationsManager.PairConstraints)
                 {
                     CachingResultPlan = CachingResultPlan,
                     ParllelScheduling = false,

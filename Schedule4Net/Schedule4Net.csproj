@@ -72,7 +72,7 @@
     <Compile Include="Core\Violator.cs" />
     <Compile Include="Core\ViolatorUpdate.cs" />
     <Compile Include="Core\ViolatorValues.cs" />
-    <Compile Include="HeuristicRepairScheduling.cs" />
+    <Compile Include="Scheduler.cs" />
     <Compile Include="ItemToSchedule.cs" />
     <Compile Include="Lane.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

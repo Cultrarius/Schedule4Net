@@ -12,10 +12,10 @@ namespace Schedule4NetTest
     [TestClass]
     public class PrallelHeuristicRepairSchedulingTest
     {
-        private HeuristicRepairScheduling scheduling;
+        private Scheduler scheduling;
         //private ViolationsManager manager;
 
-        private HeuristicRepairScheduling noConstraintScheduling;
+        private Scheduler noConstraintScheduling;
         //private ViolationsManager noConstraintManager;
         private List<SingleItemConstraint> singleConstraints;
         private List<ItemPairConstraint> pairConstraints;
@@ -50,11 +50,11 @@ namespace Schedule4NetTest
                     new DebugTestConstraint()
                 };
 
-            noConstraintScheduling = new HeuristicRepairScheduling(new List<SingleItemConstraint>(),
+            noConstraintScheduling = new Scheduler(new List<SingleItemConstraint>(),
                                                                    new List<ItemPairConstraint>());
 
             //manager = new ViolationsManager(singleConstraints, pairConstraints);
-            scheduling = new HeuristicRepairScheduling(singleConstraints, pairConstraints) { ParllelScheduling = true };
+            scheduling = new Scheduler(singleConstraints, pairConstraints) { ParllelScheduling = true };
         }
 
         //
@@ -1176,7 +1176,7 @@ namespace Schedule4NetTest
             items.AddRange(CreateTestCluster(40, 2, 100));
 
             List<ItemPairConstraint> testPairConstraints = new List<ItemPairConstraint> { new DependenciesConstraint(), new NoOverlappingConstraint() };
-            scheduling = new HeuristicRepairScheduling(singleConstraints, testPairConstraints) {ParllelScheduling = true};
+            scheduling = new Scheduler(singleConstraints, testPairConstraints) {ParllelScheduling = true};
             SchedulePlan result = scheduling.Schedule(items, fixedItems);
 
             Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
@@ -1195,7 +1195,7 @@ namespace Schedule4NetTest
             }
 
             List<ItemPairConstraint> testPairConstraints = new List<ItemPairConstraint> { new DependenciesConstraint(), new NoOverlappingConstraint() };
-            scheduling = new HeuristicRepairScheduling(singleConstraints, testPairConstraints) { ParllelScheduling = true };
+            scheduling = new Scheduler(singleConstraints, testPairConstraints) { ParllelScheduling = true };
             SchedulePlan result = scheduling.Schedule(items, fixedItems);
 
             Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
@@ -1214,7 +1214,7 @@ namespace Schedule4NetTest
             }
 
             List<ItemPairConstraint> testPairConstraints = new List<ItemPairConstraint> { new DependenciesConstraint(), new NoOverlappingConstraint() };
-            scheduling = new HeuristicRepairScheduling(singleConstraints, testPairConstraints) { ParllelScheduling = true };
+            scheduling = new Scheduler(singleConstraints, testPairConstraints) { ParllelScheduling = true };
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -1282,7 +1282,7 @@ namespace Schedule4NetTest
                 };
 
             pairConstraints.Add(newConstraint);
-            scheduling = new HeuristicRepairScheduling(singleConstraints, pairConstraints);
+            scheduling = new Scheduler(singleConstraints, pairConstraints);
 
             SchedulePlan result = scheduling.Schedule(items, fixedItems);
 
@@ -1386,7 +1386,7 @@ namespace Schedule4NetTest
             };
 
             pairConstraints.Add(newConstraint);
-            scheduling = new HeuristicRepairScheduling(singleConstraints, pairConstraints);
+            scheduling = new Scheduler(singleConstraints, pairConstraints);
 
             SchedulePlan result = scheduling.Schedule(items, fixedItems);
 

@@ -11,10 +11,10 @@ namespace Schedule4NetTest
     [TestClass]
     public class HeuristicRepairSchedulingTest
     {
-        private HeuristicRepairScheduling scheduling;
+        private Scheduler scheduling;
         //private ViolationsManager manager;
 
-        private HeuristicRepairScheduling noConstraintScheduling;
+        private Scheduler noConstraintScheduling;
         //private ViolationsManager noConstraintManager;
         private List<SingleItemConstraint> singleConstraints;
         private List<ItemPairConstraint> pairConstraints;
@@ -49,11 +49,11 @@ namespace Schedule4NetTest
                     new DebugTestConstraint()
                 };
 
-            noConstraintScheduling = new HeuristicRepairScheduling(new List<SingleItemConstraint>(),
+            noConstraintScheduling = new Scheduler(new List<SingleItemConstraint>(),
                                                                    new List<ItemPairConstraint>());
 
             //manager = new ViolationsManager(singleConstraints, pairConstraints);
-            scheduling = new HeuristicRepairScheduling(singleConstraints, pairConstraints);
+            scheduling = new Scheduler(singleConstraints, pairConstraints);
         }
 
         //
@@ -1179,7 +1179,7 @@ namespace Schedule4NetTest
                 };
 
             pairConstraints.Add(newConstraint);
-            scheduling = new HeuristicRepairScheduling(singleConstraints, pairConstraints);
+            scheduling = new Scheduler(singleConstraints, pairConstraints);
 
             SchedulePlan result = scheduling.Schedule(items, fixedItems);
 
@@ -1274,7 +1274,7 @@ namespace Schedule4NetTest
             };
 
             pairConstraints.Add(newConstraint);
-            scheduling = new HeuristicRepairScheduling(singleConstraints, pairConstraints);
+            scheduling = new Scheduler(singleConstraints, pairConstraints);
 
             SchedulePlan result = scheduling.Schedule(items, fixedItems);
 

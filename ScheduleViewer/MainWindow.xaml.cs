@@ -55,7 +55,7 @@ namespace ScheduleViewer
             required = new List<ItemToSchedule> { unit2, unit3 };
             items.Add(new ItemToSchedule(22, durations, required));
 
-            HeuristicRepairScheduling scheduling = new HeuristicRepairScheduling();
+            Scheduler scheduling = new Scheduler();
             SchedulePlan plan = scheduling.Schedule(items, fixedItems);
 
             MainCanvas.Initialize(plan.ScheduledItems, scheduling);

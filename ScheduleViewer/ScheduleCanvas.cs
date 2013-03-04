@@ -22,7 +22,7 @@ namespace ScheduleViewer
             Initialize(items, null);
         }
 
-        public void Initialize(List<ScheduledItem> items, HeuristicRepairScheduling originalScheduler)
+        public void Initialize(List<ScheduledItem> items, Scheduler originalScheduler)
         {
             _itemTable = new Dictionary<Rectangle, ScheduledItem>();
             _rectangleTable = new Dictionary<ItemToSchedule, Rectangle>();
