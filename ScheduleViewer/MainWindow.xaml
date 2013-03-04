@@ -1,9 +1,0 @@
-﻿<Window x:Class="ScheduleViewer.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:scheduleViewer="clr-namespace:ScheduleViewer"
-        Title="MainWindow" Height="700" Width="1325" WindowStartupLocation="CenterScreen">
-    <ScrollViewer  VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" HorizontalAlignment="Stretch">
-        <scheduleViewer:ScheduleCanvas x:Name="MainCanvas" HorizontalAlignment="Left" />
-    </ScrollViewer>
-    
-</Window>
