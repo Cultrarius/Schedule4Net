@@ -56,8 +56,29 @@ namespace Schedule4Net.Viewer
 
             AddDurationSlider(mainStackPanel);
             AddSnapshotSelection(mainStackPanel);
+            AddTimeMarkerCheckbox(mainStackPanel);
 
             return mainStackPanel;
+        }
+
+        private void AddTimeMarkerCheckbox(StackPanel mainStackPanel)
+        {
+            var timeMarkerCheckbox = new CheckBox {Content = "Display time markers", Margin = new Thickness(3), IsChecked = true};
+            timeMarkerCheckbox.Checked += timeMarkerCheckbox_Checked;
+            timeMarkerCheckbox.Unchecked += TimeMarkerCheckboxOnUnchecked;
+            mainStackPanel.Children.Add(timeMarkerCheckbox);
+        }
+
+        private void TimeMarkerCheckboxOnUnchecked(object sender, RoutedEventArgs e)
+        {
+            _scheduleCanvas.DisplayTimeMarkers = false;
+            DisplaySnapshot(_currentSnapshot);
+        }
+
+        private void timeMarkerCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+            _scheduleCanvas.DisplayTimeMarkers = true;
+            DisplaySnapshot(_currentSnapshot);
         }
 
         private void AddSnapshotSelection(Panel mainStackPanel)

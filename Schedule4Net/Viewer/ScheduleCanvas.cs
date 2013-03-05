@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Schedule4Net.Core;
@@ -12,8 +13,13 @@ namespace Schedule4Net.Viewer
     public class ScheduleCanvas : Canvas
     {
         public double DurationScale = 1.0;
+        public bool DisplayTimeMarkers = true;
+        private const double MinTimeMarkerDistance = 20;
+        private const double TopMargin = 15;
+        private const double LeftMargin = 5;
 
         private SortedSet<Lane> _lanes;
+        private SortedSet<int> _times;
         private IList<ScheduledItem> _items;
         private IDictionary<ItemToSchedule, ISet<ViolationsManager.ConstraintPartner>> _constraintMap;
         private IDictionary<Rectangle, ScheduledItem> _itemTable;
@@ -42,9 +48,73 @@ namespace Schedule4Net.Viewer
 
             FindLanes();
             PaintLanes();
+            if (DisplayTimeMarkers)
+            {
+                FindTimeMarkers();
+                PaintTimeMarkers();
+                PaintTimeLabels();
+            }
             PaintItems();
 
-            Height = _lanes.Count * 50 + 50;
+            Height = _lanes.Count * 50 + 50 + TopMargin;
+        }
+
+        private void PaintTimeLabels()
+        {
+            foreach (int time in _times)
+            {
+                // text on top
+                TextBlock textTop = new TextBlock { Text = time.ToString(CultureInfo.InvariantCulture), FontSize = 11, Foreground = Brushes.Silver};
+                TextOptions.SetTextFormattingMode(textTop, TextFormattingMode.Display);
+                Children.Add(textTop);
+                SetLeft(textTop, 2 + 25 + time * DurationScale + LeftMargin);
+                SetTop(textTop, 0);
+
+                //text on bottom
+                TextBlock textBottom = new TextBlock { Text = time.ToString(CultureInfo.InvariantCulture), FontSize = 11, Foreground = Brushes.Silver };
+                TextOptions.SetTextFormattingMode(textBottom, TextFormattingMode.Display);
+                Children.Add(textBottom);
+                SetLeft(textBottom, 2 + 25 + time * DurationScale + LeftMargin);
+                SetTop(textBottom, _lanes.Count * 50 + 10 + TopMargin);
+            }
+        }
+
+        private void PaintTimeMarkers()
+        {
+            foreach (int time in _times)
+            {
+                Line verticalLine = new Line
+                {
+                    X1 = 2 + 25 + time * DurationScale + LeftMargin,
+                    X2 = 2 + 25 + time * DurationScale + LeftMargin,
+                    Y1 = TopMargin,
+                    Y2 = _lanes.Count * 50 + 10 + TopMargin,
+                    Stroke = Brushes.Silver,
+                    StrokeThickness = 1,
+                    StrokeDashArray = new DoubleCollection { 3, 2 },
+                    StrokeDashCap = PenLineCap.Round
+                };
+                Children.Add(verticalLine);
+            }
+        }
+
+        private void FindTimeMarkers()
+        {
+            SortedSet<int> tempTimes = new SortedSet<int>();
+            foreach (ScheduledItem scheduledItem in _items)
+            {
+                tempTimes.UnionWith(scheduledItem.Ends.Values);
+                tempTimes.Add(scheduledItem.Start);
+            }
+
+            _times = new SortedSet<int> { 0 };
+            int lastValue = 0;
+            foreach (int time in tempTimes)
+            {
+                if (!(time - lastValue > MinTimeMarkerDistance / DurationScale)) continue;
+                _times.Add(time);
+                lastValue = time;
+            }
         }
 
         private void PaintItems()
@@ -67,8 +137,8 @@ namespace Schedule4Net.Viewer
             TextBlock text = new TextBlock { Text = "Id: " + scheduledItem.ItemToSchedule.Id, FontSize = 11 };
             TextOptions.SetTextFormattingMode(text, TextFormattingMode.Display);
             Children.Add(text);
-            SetLeft(text, 7 + 25 + scheduledItem.Start * DurationScale);
-            SetTop(text, 2 + 15 + offset);
+            SetLeft(text, 7 + 25 + scheduledItem.Start * DurationScale + LeftMargin);
+            SetTop(text, 2 + 15 + offset + TopMargin);
         }
 
         private void PaintRectangle(ScheduledItem scheduledItem, Lane lane, int offset)
@@ -90,11 +160,11 @@ namespace Schedule4Net.Viewer
             r.MouseEnter += r_MouseEnter;
             r.MouseLeave += r_MouseLeave;
             Children.Add(r);
-            SetLeft(r, 2 + 25 + scheduledItem.Start * DurationScale);
-            SetTop(r, offset + 2);
+            SetLeft(r, 2 + 25 + scheduledItem.Start * DurationScale + LeftMargin);
+            SetTop(r, offset + 2 + TopMargin);
 
             Width = Math.Max(Width,
-                             50 + (2 + 25 + scheduledItem.Start * DurationScale) +
+                             LeftMargin + 50 + (2 + 25 + scheduledItem.Start * DurationScale) +
                              ((end - scheduledItem.Start) * DurationScale));
         }
 
@@ -104,15 +174,32 @@ namespace Schedule4Net.Viewer
             foreach (Lane lane in _lanes)
             {
                 AddLabelText(lane, offset);
-
-                Line verticalLine = new Line { X1 = 20, X2 = 20, Y1 = offset, Y2 = offset + 50, Stroke = Brushes.Black, StrokeThickness = 1, SnapsToDevicePixels = true };
-                Children.Add(verticalLine);
-
                 offset += 50;
 
-                Line horizontalLine = new Line { X1 = 0, X2 = 10000, Y1 = offset, Y2 = offset, Stroke = Brushes.Black, StrokeThickness = 1, SnapsToDevicePixels = true };
+                Line horizontalLine = new Line
+                {
+                    X1 = 0,
+                    X2 = 10000,
+                    Y1 = offset + TopMargin,
+                    Y2 = offset + TopMargin,
+                    Stroke = Brushes.Black,
+                    StrokeThickness = 1,
+                    SnapsToDevicePixels = true
+                };
                 Children.Add(horizontalLine);
             }
+
+            Line verticalLine = new Line
+            {
+                X1 = 20 + LeftMargin,
+                X2 = 20 + LeftMargin,
+                Y1 = 0,
+                Y2 = offset + TopMargin,
+                Stroke = Brushes.Black,
+                StrokeThickness = 1,
+                SnapsToDevicePixels = true
+            };
+            Children.Add(verticalLine);
         }
 
         private void AddLabelText(Lane lane, int offset)
@@ -120,7 +207,7 @@ namespace Schedule4Net.Viewer
             TextBlock text = new TextBlock { Text = lane.ToString(), LayoutTransform = new RotateTransform(270), FontSize = 11 };
             TextOptions.SetTextFormattingMode(text, TextFormattingMode.Display);
             Children.Add(text);
-            SetTop(text, offset + 3);
+            SetTop(text, offset + 3 + TopMargin);
         }
 
         private void FindLanes()
