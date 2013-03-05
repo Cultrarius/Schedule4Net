@@ -46,6 +46,7 @@ namespace Schedule4Net
         /// If <c>true</c> then the scheduler will try to schedule independent clusters of <see cref="ItemToSchedule"/> separately from one another.
         /// The constraints used by the scheduler _must_ be thread-safe if this feature is used.
         /// Also note that the result may vary from non-parallel scheduling since the input-order of items is not preserved.
+        /// Parallel scheduling also does not provide snapshots of the intermediate steps.
         /// </summary>
         public bool ParllelScheduling { get; set; }
 
@@ -159,6 +160,7 @@ namespace Schedule4Net
                     _plan.Schedule(scheduledItem);
                 }
             }
+            _snapshots.Add(_plan.ScheduledItems);
         }
 
         private void ScheduleCluster(ISet<ItemToSchedule> cluster)
