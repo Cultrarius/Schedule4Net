@@ -18,6 +18,7 @@ namespace Schedule4Net.Viewer
         private TextBox _snapshotTextBox;
         private Label _snapshotLabel;
         private int _currentSnapshot;
+        private bool updateTextbox = false;
 
         public ScheduleControlPanel()
         {
@@ -110,7 +111,7 @@ namespace Schedule4Net.Viewer
         void _snapshotTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             int result;
-            if (int.TryParse(_snapshotTextBox.Text, out result))
+            if (!updateTextbox && int.TryParse(_snapshotTextBox.Text, out result))
             {
                 DisplaySnapshot(result - 1);
             }
@@ -132,7 +133,11 @@ namespace Schedule4Net.Viewer
             var snapshots = _originalScheduler.Snapshots;
             if (number >= snapshots.Count) return;
             _currentSnapshot = number;
+
+            updateTextbox = true;
             _snapshotTextBox.Text = (number + 1).ToString(CultureInfo.InvariantCulture);
+            updateTextbox = false;
+
             _scheduleCanvas.Initialize(snapshots[number], _originalScheduler);
         }
 

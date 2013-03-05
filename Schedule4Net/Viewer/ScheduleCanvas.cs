@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -23,7 +22,7 @@ namespace Schedule4Net.Viewer
         private IList<ScheduledItem> _items;
         private IDictionary<ItemToSchedule, ISet<ViolationsManager.ConstraintPartner>> _constraintMap;
         private IDictionary<Rectangle, ScheduledItem> _itemTable;
-        private IDictionary<ItemToSchedule, Rectangle> _rectangleTable;
+        private IDictionary<ItemToSchedule, IList<Rectangle>> _rectangleTable;
 
         public ScheduleCanvas()
         {
@@ -39,12 +38,12 @@ namespace Schedule4Net.Viewer
 
         public void Initialize(IList<ScheduledItem> items, Scheduler originalScheduler)
         {
-
             _itemTable = new Dictionary<Rectangle, ScheduledItem>();
-            _rectangleTable = new Dictionary<ItemToSchedule, Rectangle>();
+            _rectangleTable = new Dictionary<ItemToSchedule, IList<Rectangle>>();
             _constraintMap = originalScheduler == null ? null : originalScheduler.ViolationsManager.ConstraintMap;
             _items = items;
             Children.Clear();
+            Width = 50;
 
             FindLanes();
             PaintLanes();
@@ -156,7 +155,15 @@ namespace Schedule4Net.Viewer
                     SnapsToDevicePixels = true
                 };
             _itemTable.Add(r, scheduledItem);
-            _rectangleTable.Add(scheduledItem.ItemToSchedule, r);
+            if (_rectangleTable.ContainsKey(scheduledItem.ItemToSchedule))
+            {
+                _rectangleTable[scheduledItem.ItemToSchedule].Add(r);
+            }
+            else
+            {
+                _rectangleTable.Add(scheduledItem.ItemToSchedule, new List<Rectangle> {r});
+            }
+            
             r.MouseEnter += r_MouseEnter;
             r.MouseLeave += r_MouseLeave;
             Children.Add(r);
@@ -164,7 +171,7 @@ namespace Schedule4Net.Viewer
             SetTop(r, offset + 2 + TopMargin);
 
             Width = Math.Max(Width,
-                             LeftMargin + 50 + (2 + 25 + scheduledItem.Start * DurationScale) +
+                             50 + (2 + 25 + scheduledItem.Start * DurationScale + LeftMargin) +
                              ((end - scheduledItem.Start) * DurationScale));
         }
 
@@ -242,13 +249,20 @@ namespace Schedule4Net.Viewer
         {
             if (_constraintMap == null) return;
             Rectangle r = sender as Rectangle;
-            if (r != null) r.Fill = Brushes.Chartreuse;
-
-            ScheduledItem scheduled = _itemTable[r];
-            foreach (ViolationsManager.ConstraintPartner partner in _constraintMap[scheduled.ItemToSchedule])
+            if (r == null) return;
+            ItemToSchedule item = _itemTable[r].ItemToSchedule;
+            foreach (Rectangle rect in _rectangleTable[item])
             {
-                Rectangle rect = _rectangleTable[partner.PartnerItem];
-                rect.Fill = Brushes.OrangeRed;
+                rect.Fill = Brushes.Chartreuse;
+            }
+            
+            foreach (ViolationsManager.ConstraintPartner partner in _constraintMap[item])
+            {
+                foreach (Rectangle rect in _rectangleTable[partner.PartnerItem])
+                {
+                    rect.Fill = Brushes.OrangeRed;
+                }
+                
             }
         }
     }
