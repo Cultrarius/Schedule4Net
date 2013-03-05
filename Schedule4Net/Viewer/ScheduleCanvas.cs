@@ -8,10 +8,10 @@ namespace Schedule4Net.Viewer
 {
     public class ScheduleCanvas : Canvas
     {
-        public double DurationScale = 0.5;
+        public double DurationScale = 1.0;
 
         private SortedSet<Lane> _lanes;
-        private List<ScheduledItem> _items;
+        private IList<ScheduledItem> _items;
         private IDictionary<ItemToSchedule, ISet<ViolationsManager.ConstraintPartner>> _constraintMap;
         private IDictionary<Rectangle, ScheduledItem> _itemTable;
         private IDictionary<ItemToSchedule, Rectangle> _rectangleTable; 
@@ -21,17 +21,20 @@ namespace Schedule4Net.Viewer
             Initialize(items, null);
         }
 
-        public void Initialize(List<ScheduledItem> items, Scheduler originalScheduler)
+        public void Initialize(IList<ScheduledItem> items, Scheduler originalScheduler)
         {
             _itemTable = new Dictionary<Rectangle, ScheduledItem>();
             _rectangleTable = new Dictionary<ItemToSchedule, Rectangle>();
             _constraintMap = originalScheduler == null ? null : originalScheduler.ViolationsManager.ConstraintMap;
-            Width = 1000;
-            Height = 1000;
             _items = items;
+            Children.Clear();
+            
             FindLanes();
             PaintLanes();
             PaintItems();
+
+            Width = 1000;
+            Height = 1000;
         }
 
         private void PaintItems()

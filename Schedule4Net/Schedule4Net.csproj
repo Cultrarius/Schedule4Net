@@ -83,6 +83,7 @@
     <Compile Include="ScheduledItem.cs" />
     <Compile Include="SchedulePlan.cs" />
     <Compile Include="Viewer\ScheduleCanvas.cs" />
+    <Compile Include="Viewer\ScheduleControlPanel.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
