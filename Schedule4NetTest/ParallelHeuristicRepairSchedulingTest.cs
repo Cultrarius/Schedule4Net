@@ -1233,7 +1233,7 @@ namespace Schedule4NetTest
 
             // the second run should be much faster because the scheduler cached the previous result, even with parallel scheduling
             Debug.WriteLine("First: " + firstRun + " Second: " + secondRun);
-            Assert.IsTrue(firstRun > (secondRun * 1.5));
+            Assert.IsTrue(firstRun > secondRun );
         }
 
         [TestMethod]
