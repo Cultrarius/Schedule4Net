@@ -35,7 +35,7 @@ namespace Schedule4Net.Viewer
             var sep = new Separator { Style = (Style)FindResource(ToolBar.SeparatorStyleKey) };
             SetColumn(sep, 1);
 
-            _scheduleCanvas = new ScheduleCanvas { HorizontalAlignment = HorizontalAlignment.Left };
+            _scheduleCanvas = new ScheduleCanvas();
             _viewer = new ScrollViewer
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,

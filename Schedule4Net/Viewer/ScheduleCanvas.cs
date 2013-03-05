@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Schedule4Net.Core;
+using System;
 
 namespace Schedule4Net.Viewer
 {
@@ -14,7 +17,14 @@ namespace Schedule4Net.Viewer
         private IList<ScheduledItem> _items;
         private IDictionary<ItemToSchedule, ISet<ViolationsManager.ConstraintPartner>> _constraintMap;
         private IDictionary<Rectangle, ScheduledItem> _itemTable;
-        private IDictionary<ItemToSchedule, Rectangle> _rectangleTable; 
+        private IDictionary<ItemToSchedule, Rectangle> _rectangleTable;
+
+        public ScheduleCanvas()
+        {
+            HorizontalAlignment = HorizontalAlignment.Left;
+            VerticalAlignment = VerticalAlignment.Top;
+            Width = 50;
+        }
 
         public void Initialize(List<ScheduledItem> items)
         {
@@ -23,18 +33,18 @@ namespace Schedule4Net.Viewer
 
         public void Initialize(IList<ScheduledItem> items, Scheduler originalScheduler)
         {
+
             _itemTable = new Dictionary<Rectangle, ScheduledItem>();
             _rectangleTable = new Dictionary<ItemToSchedule, Rectangle>();
             _constraintMap = originalScheduler == null ? null : originalScheduler.ViolationsManager.ConstraintMap;
             _items = items;
             Children.Clear();
-            
+
             FindLanes();
             PaintLanes();
             PaintItems();
 
-            Width = 1000;
-            Height = 1000;
+            Height = _lanes.Count * 50 + 50;
         }
 
         private void PaintItems()
@@ -54,10 +64,10 @@ namespace Schedule4Net.Viewer
 
         private void PaintText(ScheduledItem scheduledItem, int offset)
         {
-            TextBlock text = new TextBlock {Text = "Id: " + scheduledItem.ItemToSchedule.Id, FontSize = 11};
+            TextBlock text = new TextBlock { Text = "Id: " + scheduledItem.ItemToSchedule.Id, FontSize = 11 };
             TextOptions.SetTextFormattingMode(text, TextFormattingMode.Display);
             Children.Add(text);
-            SetLeft(text, 7 + 25 + scheduledItem.Start*DurationScale);
+            SetLeft(text, 7 + 25 + scheduledItem.Start * DurationScale);
             SetTop(text, 2 + 15 + offset);
         }
 
@@ -67,7 +77,7 @@ namespace Schedule4Net.Viewer
             Rectangle r = new Rectangle
                 {
                     Height = 46,
-                    Width = (end - scheduledItem.Start)*DurationScale,
+                    Width = (end - scheduledItem.Start) * DurationScale,
                     Opacity = 0.4,
                     Stroke = Brushes.Black,
                     Fill = Brushes.LightSteelBlue,
@@ -80,8 +90,12 @@ namespace Schedule4Net.Viewer
             r.MouseEnter += r_MouseEnter;
             r.MouseLeave += r_MouseLeave;
             Children.Add(r);
-            SetLeft(r, 2 + 25 + scheduledItem.Start*DurationScale);
+            SetLeft(r, 2 + 25 + scheduledItem.Start * DurationScale);
             SetTop(r, offset + 2);
+
+            Width = Math.Max(Width,
+                             50 + (2 + 25 + scheduledItem.Start * DurationScale) +
+                             ((end - scheduledItem.Start) * DurationScale));
         }
 
         private void PaintLanes()
