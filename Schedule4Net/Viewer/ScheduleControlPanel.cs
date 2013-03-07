@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Schedule4Net.Constraint;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Windows;
@@ -18,7 +19,8 @@ namespace Schedule4Net.Viewer
         private TextBox _snapshotTextBox;
         private Label _snapshotLabel;
         private int _currentSnapshot;
-        private bool updateTextbox = false;
+        private bool _updateTextbox;
+        private ListBox _constraintList;
 
         public ScheduleControlPanel()
         {
@@ -58,13 +60,20 @@ namespace Schedule4Net.Viewer
             AddDurationSlider(mainStackPanel);
             AddSnapshotSelection(mainStackPanel);
             AddTimeMarkerCheckbox(mainStackPanel);
+            AddConstraintDisplay(mainStackPanel);
 
             return mainStackPanel;
         }
 
-        private void AddTimeMarkerCheckbox(StackPanel mainStackPanel)
+        private void AddConstraintDisplay(StackPanel mainStackPanel)
         {
-            var timeMarkerCheckbox = new CheckBox {Content = "Display time markers", Margin = new Thickness(3), IsChecked = true};
+            _constraintList = new ListBox { IsEnabled = false };
+            mainStackPanel.Children.Add(_constraintList);
+        }
+
+        private void AddTimeMarkerCheckbox(Panel mainStackPanel)
+        {
+            var timeMarkerCheckbox = new CheckBox { Content = "Display time markers", Margin = new Thickness(3), IsChecked = true };
             timeMarkerCheckbox.Checked += timeMarkerCheckbox_Checked;
             timeMarkerCheckbox.Unchecked += TimeMarkerCheckboxOnUnchecked;
             mainStackPanel.Children.Add(timeMarkerCheckbox);
@@ -111,7 +120,7 @@ namespace Schedule4Net.Viewer
         void _snapshotTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             int result;
-            if (!updateTextbox && int.TryParse(_snapshotTextBox.Text, out result))
+            if (!_updateTextbox && int.TryParse(_snapshotTextBox.Text, out result))
             {
                 DisplaySnapshot(result - 1);
             }
@@ -134,9 +143,9 @@ namespace Schedule4Net.Viewer
             if (number >= snapshots.Count) return;
             _currentSnapshot = number;
 
-            updateTextbox = true;
+            _updateTextbox = true;
             _snapshotTextBox.Text = (number + 1).ToString(CultureInfo.InvariantCulture);
-            updateTextbox = false;
+            _updateTextbox = false;
 
             _scheduleCanvas.Initialize(snapshots[number], _originalScheduler);
         }
@@ -180,7 +189,20 @@ namespace Schedule4Net.Viewer
             _originalScheduler = originalScheduler;
             _currentSchedule = displayedPlan.ScheduledItems;
             _snapshotLabel.Content = "/ " + _originalScheduler.Snapshots.Count;
+            UpdateDisplayedConstraints();
             DisplaySnapshot(_originalScheduler.Snapshots.Count - 1);
+        }
+
+        private void UpdateDisplayedConstraints()
+        {
+            _constraintList.Items.Clear();
+            foreach (ItemPairConstraint constraint in _originalScheduler.ViolationsManager.PairConstraints)
+            {
+                Brush backColor = ScheduleCanvas.GetColorForConstraint(constraint).Clone();
+                backColor.Opacity = 0.5;
+                var item = new ListBoxItem { Content = constraint.GetType().Name, Background = backColor };
+                _constraintList.Items.Add(item);
+            }
         }
     }
 }

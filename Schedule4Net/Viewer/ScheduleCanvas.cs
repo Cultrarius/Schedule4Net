@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using Schedule4Net.Core;
 using System;
+using Schedule4Net.Constraint;
 
 namespace Schedule4Net.Viewer
 {
@@ -23,6 +24,20 @@ namespace Schedule4Net.Viewer
         private IDictionary<ItemToSchedule, ISet<ViolationsManager.ConstraintPartner>> _constraintMap;
         private IDictionary<Rectangle, ScheduledItem> _itemTable;
         private IDictionary<ItemToSchedule, IList<Rectangle>> _rectangleTable;
+
+        private static readonly List<Brush> ConstraintColors = new List<Brush> { 
+            Brushes.DarkOrange, 
+            Brushes.Aqua, 
+            Brushes.Red, 
+            Brushes.Yellow,
+            Brushes.Blue, 
+            Brushes.DeepPink, 
+            Brushes.Gold, 
+            Brushes.LightPink, 
+            Brushes.DarkViolet,
+            Brushes.Teal,
+            Brushes.YellowGreen
+             };
 
         public ScheduleCanvas()
         {
@@ -133,7 +148,7 @@ namespace Schedule4Net.Viewer
 
         private void PaintText(ScheduledItem scheduledItem, int offset)
         {
-            TextBlock text = new TextBlock { Text = "Id: " + scheduledItem.ItemToSchedule.Id, FontSize = 11 };
+            TextBlock text = new TextBlock { Text = scheduledItem.ItemToSchedule.ToString(), FontSize = 11 };
             TextOptions.SetTextFormattingMode(text, TextFormattingMode.Display);
             Children.Add(text);
             SetLeft(text, 7 + 25 + scheduledItem.Start * DurationScale + LeftMargin);
@@ -260,10 +275,26 @@ namespace Schedule4Net.Viewer
             {
                 foreach (Rectangle rect in _rectangleTable[partner.PartnerItem])
                 {
-                    rect.Fill = Brushes.OrangeRed;
+                    var gradientCollection = new GradientStopCollection();
+
+                    double offset = 0;
+                    foreach (ItemPairConstraint constraint in partner.Constraints)
+                    {
+                        var gradientStop = new GradientStop(((SolidColorBrush) GetColorForConstraint(constraint)).Color, offset);
+                        gradientCollection.Add(gradientStop);
+                        offset++;
+                    }
+
+                    rect.Fill = new LinearGradientBrush(gradientCollection);
                 }
                 
             }
+        }
+
+        internal static Brush GetColorForConstraint(ItemPairConstraint constraint)
+        {
+            int id = Math.Abs(constraint.GetType().Name.GetHashCode());
+            return ConstraintColors[id % ConstraintColors.Count];
         }
     }
 }
