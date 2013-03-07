@@ -12,7 +12,6 @@ namespace Schedule4Net.Viewer
     {
         private ScheduleCanvas _scheduleCanvas;
         private ScrollViewer _viewer;
-        private SchedulePlan _displayedPlan;
         private Scheduler _originalScheduler;
         private List<ScheduledItem> _currentSchedule;
 
@@ -185,7 +184,6 @@ namespace Schedule4Net.Viewer
 
         public void Initialize(SchedulePlan displayedPlan, Scheduler originalScheduler)
         {
-            _displayedPlan = displayedPlan;
             _originalScheduler = originalScheduler;
             _currentSchedule = displayedPlan.ScheduledItems;
             _snapshotLabel.Content = "/ " + _originalScheduler.Snapshots.Count;
