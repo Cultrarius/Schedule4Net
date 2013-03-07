@@ -64,15 +64,16 @@ namespace Schedule4Net.Viewer
             return mainStackPanel;
         }
 
-        private void AddConstraintDisplay(StackPanel mainStackPanel)
+        private void AddConstraintDisplay(Panel mainStackPanel)
         {
-            _constraintList = new ListBox { IsEnabled = false };
+            mainStackPanel.Children.Add(new Separator { Margin = new Thickness(0, 5, 0, 5) });
+            _constraintList = new ListBox { IsTabStop = false, IsEnabled = false, Margin = new Thickness(5) };
             mainStackPanel.Children.Add(_constraintList);
         }
 
         private void AddTimeMarkerCheckbox(Panel mainStackPanel)
         {
-            var timeMarkerCheckbox = new CheckBox { Content = "Display time markers", Margin = new Thickness(3), IsChecked = true };
+            var timeMarkerCheckbox = new CheckBox { Content = "Display time markers", Margin = new Thickness(5), IsChecked = true };
             timeMarkerCheckbox.Checked += timeMarkerCheckbox_Checked;
             timeMarkerCheckbox.Unchecked += TimeMarkerCheckboxOnUnchecked;
             mainStackPanel.Children.Add(timeMarkerCheckbox);
@@ -106,7 +107,7 @@ namespace Schedule4Net.Viewer
             var snapGreaterButton = new Button { Content = " > " };
             snapGreaterButton.Click += snapGreaterButton_Click;
 
-            var snapshotPanel = new DockPanel { LastChildFill = false };
+            var snapshotPanel = new DockPanel { LastChildFill = false, Margin = new Thickness(5) };
             snapshotPanel.Children.Add(new Label { Content = "Snapshot: " });
             snapshotPanel.Children.Add(_snapshotTextBox);
             snapshotPanel.Children.Add(_snapshotLabel);
@@ -158,7 +159,8 @@ namespace Schedule4Net.Viewer
                 Maximum = 1,
                 Value = 0,
                 TickFrequency = 0.1,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(5)
             };
             durationScaleSlider.ValueChanged += DurationScaleSliderOnValueChanged;
             var scalePanel = new DockPanel();
