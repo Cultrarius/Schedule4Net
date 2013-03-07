@@ -234,6 +234,7 @@ namespace Schedule4NetTest
         public void TestScheduleUnsatisfiable()
         {
             // One fixed items leads to an unsatisfiable situation
+            // Actually this has to be done in two clusters, otherwise the scheduler will schedule them sequentially
             List<ScheduledItem> fixedItems = new List<ScheduledItem>();
 
             IList<ItemToSchedule> items = new List<ItemToSchedule>();
@@ -249,6 +250,18 @@ namespace Schedule4NetTest
             required.Add(item1);
             ItemToSchedule item2 = new ItemToSchedule(11, durations, required);
             fixedItems.Add(new ScheduledItem(item2));
+
+            durations.Clear();
+            durations.Add(new Lane(1), 100);
+            ItemToSchedule item3 = new ItemToSchedule(2, durations, new List<ItemToSchedule>());
+            items.Add(item3);
+
+            durations.Clear();
+            durations.Add(new Lane(1), 100);
+            required.Clear();
+            required.Add(item3);
+            ItemToSchedule item4 = new ItemToSchedule(22, durations, required);
+            fixedItems.Add(new ScheduledItem(item4));
 
             scheduling.Schedule(items, fixedItems);
         }
