@@ -25,11 +25,7 @@ namespace Schedule4Net.Core
 
             ScheduledItem newItem = plan.MoveScheduledItem(violator.ScheduledItem.ItemToSchedule, start);
             ViolatorUpdate violatorUpdate;
-            try
-            {
-                violatorUpdate = _violationsManager.TryViolatorUpdate(newItem, plan);
-            }
-            catch (ViolatorUpdateInvalid)
+            if (!_violationsManager.TryViolatorUpdate(newItem, plan, out violatorUpdate))
             {
                 // the update failed since the new item conflicts against more constraints than the reference
                 return false;

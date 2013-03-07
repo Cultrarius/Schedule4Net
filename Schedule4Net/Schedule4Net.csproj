@@ -69,7 +69,6 @@
     <Compile Include="Constraint\UpdateableConstraint.cs" />
     <Compile Include="Core\ConfigurationsManager.cs" />
     <Compile Include="Core\Exception\SchedulingException.cs" />
-    <Compile Include="Core\Exception\ViolatorUpdateInvalid.cs" />
     <Compile Include="Core\Predictor.cs" />
     <Compile Include="Core\ScheduleUtil.cs" />
     <Compile Include="Core\ViolationsManager.cs" />

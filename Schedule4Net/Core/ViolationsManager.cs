@@ -89,7 +89,10 @@ namespace Schedule4Net.Core
                     ISet<ConstraintPartner> pairs = ConstraintMap[itemToSchedule];
                     if (pairs.Count > 0)
                     {
-                        CheckPairConstraints(item, plan, pairs, false);
+                        if (!CheckPairConstraints(item, plan, pairs, false))
+                        {
+                            throw new SchedulingException("Unable to initialize violation tree!");
+                        }
                     }
                 }
 
@@ -140,27 +143,36 @@ namespace Schedule4Net.Core
         }
 
         /// <summary>
-        /// This method checks if the provided item can be rescheduled in the provided <see cref="SchedulePlan"/>.
+        /// This method checks if the provided item can be rescheduled in the provided <see cref="SchedulePlan" />.
         /// This method is merely checking if such a rescheduling would be possible and what it would mean for the constriant violation values of the involved items.
         /// This method does not automatically reschedule the item if it is possible to do so.
         /// It returns an items that contains all information necessary to efficiently reschedule the item and update all constraint ciolations accordingly.
         /// </summary>
         /// <param name="newItem">The new scheduled item to be checked against the given plan.</param>
         /// <param name="plan">The plan the item should be rescheduled in.</param>
-        /// <returns>A <see cref="ViolatorUpdate"/> object containing all the information about the rescheduling and the changes to the constraint violations</returns>
-        /// <exception cref="ViolatorUpdateInvalid">Is thrown when the rescheduling is not possible because rescheduling would lead to bigger contraint violations</exception>
-        public ViolatorUpdate TryViolatorUpdate(ScheduledItem newItem, SchedulePlan plan)
+        /// <param name="update">If the method is successful then this is set to a <see cref="ViolatorUpdate" /> object containing all the information about the rescheduling and the changes to the constraint violations.</param>
+        /// <returns>
+        /// <c>True</c> if the operation was successful, <c>false</c> otherwise
+        /// </returns>
+        public bool TryViolatorUpdate(ScheduledItem newItem, SchedulePlan plan, out ViolatorUpdate update)
         {
+            update = null;
             ItemToSchedule itemToSchedule = newItem.ItemToSchedule;
             Violator violator = _violationsMapping[itemToSchedule];
 
             ViolatorValues newValues = new ViolatorValues();
-            CalculateSingleConstraintValues(newItem, violator, newValues);
+            if (!CalculateSingleConstraintValues(newItem, violator, newValues))
+            {
+                return false;
+            }
 
             if (UsingPrediction)
             {
                 Predictor.ConflictPrediction prediction = _predictor.PredictConflicts(newItem);
-                CheckUpdateValid(violator, newValues.HardViolationsValue + prediction.GetDefinedHardConflictValue(), newValues.SoftViolationsValue);
+                if (!CheckUpdateValid(violator, newValues.HardViolationsValue + prediction.GetDefinedHardConflictValue(), newValues.SoftViolationsValue))
+                {
+                    return false;
+                }
             }
 
             System.Collections.Generic.IList<PartnerUpdate> partnerUpdates;
@@ -173,7 +185,10 @@ namespace Schedule4Net.Core
                 {
                     ScheduledItem partnerItem = plan.GetScheduledItem(partner.PartnerItem);
                     ViolatorValues newPartnerValues = new ViolatorValues();
-                    CalculatePairConstraintValues(newItem, violator, newValues, partner, partnerItem, newPartnerValues);
+                    if (!CalculatePairConstraintValues(newItem, violator, newValues, partner, partnerItem, newPartnerValues))
+                    {
+                        return false;
+                    }
                     UpdatePartnerViolator(partnerUpdates, partner, partnerItem, newPartnerValues);
                 }
             }
@@ -183,7 +198,8 @@ namespace Schedule4Net.Core
             }
 
             Violator updatedViolator = new Violator(newItem, newValues.HardViolationsValue, newValues.SoftViolationsValue, this);
-            return new ViolatorUpdate(updatedViolator, partnerUpdates);
+            update = new ViolatorUpdate(updatedViolator, partnerUpdates);
+            return true;
         }
 
         private void UpdatePartnerViolator(System.Collections.Generic.IList<PartnerUpdate> partnerUpdates, ConstraintPartner partner, ScheduledItem partnerItem, ViolatorValues newPartnerValues)
@@ -199,7 +215,7 @@ namespace Schedule4Net.Core
             partnerUpdates.Add(new PartnerUpdate(partner, newPartnerValues, partnerViolator, updatedPartner));
         }
 
-        private static void CalculatePairConstraintValues(ScheduledItem newItem, Violator violator, ViolatorValues newValues,
+        private static bool CalculatePairConstraintValues(ScheduledItem newItem, Violator violator, ViolatorValues newValues,
             ConstraintPartner partner, ScheduledItem partnerItem, ViolatorValues newPartnerValues)
         {
             foreach (ItemPairConstraint constraint in partner.Constraints)
@@ -217,11 +233,15 @@ namespace Schedule4Net.Core
                     newPartnerValues.SoftViolationsValue += decision.ViolationValue;
                 }
 
-                CheckUpdateValid(violator, newValues.HardViolationsValue, newValues.SoftViolationsValue);
+                if (!CheckUpdateValid(violator, newValues.HardViolationsValue, newValues.SoftViolationsValue))
+                {
+                    return false;
+                }
             }
+            return true;
         }
 
-        private void CalculateSingleConstraintValues(ScheduledItem newItem, Violator violator, ViolatorValues newValues)
+        private bool CalculateSingleConstraintValues(ScheduledItem newItem, Violator violator, ViolatorValues newValues)
         {
             foreach (SingleItemConstraint constraint in SingleConstraints)
             {
@@ -238,8 +258,12 @@ namespace Schedule4Net.Core
                     }
                 }
 
-                CheckUpdateValid(violator, newValues.HardViolationsValue, newValues.SoftViolationsValue);
+                if (!CheckUpdateValid(violator, newValues.HardViolationsValue, newValues.SoftViolationsValue))
+                {
+                    return false;
+                }
             }
+            return true;
         }
 
         public class PartnerUpdate
@@ -291,8 +315,7 @@ namespace Schedule4Net.Core
             _predictor.ItemWasMoved(itemToSchedule);
         }
 
-        private void CheckPairConstraints(ScheduledItem scheduledItem, SchedulePlan plan, IEnumerable<ConstraintPartner> partners,
-            bool updateConnected, ViolatorValues newValues, Violator violator)
+        private bool CheckPairConstraints(ScheduledItem scheduledItem, SchedulePlan plan, IEnumerable<ConstraintPartner> partners, bool updateConnected, ViolatorValues newValues = null, Violator violator = null)
         {
             foreach (ConstraintPartner partner in partners)
             {
@@ -321,7 +344,10 @@ namespace Schedule4Net.Core
                         newValues.SoftViolationsValue += decision.ViolationValue;
                     }
 
-                    CheckUpdateValid(violator, newValues.HardViolationsValue, newValues.SoftViolationsValue);
+                    if (!CheckUpdateValid(violator, newValues.HardViolationsValue, newValues.SoftViolationsValue))
+                    {
+                        return false;
+                    }
                 }
                 container.UpdateValues(violations);
 
@@ -333,6 +359,7 @@ namespace Schedule4Net.Core
                     UpdatePartner(partner, partnerItem, container, oldParterValues);
                 }
             }
+            return true;
         }
 
         private void UpdatePartner(ConstraintPartner partner, ScheduledItem partnerItem, ViolationsContainer container,
@@ -350,23 +377,9 @@ namespace Schedule4Net.Core
             _violationsMapping.Add(partnerItem.ItemToSchedule, updatedViolator);
         }
 
-        private static void CheckUpdateValid(Violator violator, int newHardViolationsValue, int newSoftViolationsValue)
+        private static bool CheckUpdateValid(Violator violator, int newHardViolationsValue, int newSoftViolationsValue)
         {
-            if (newHardViolationsValue > violator.HardViolationsValue
-                || (newHardViolationsValue == violator.HardViolationsValue && newSoftViolationsValue > violator.SoftViolationsValue)) { throw new ViolatorUpdateInvalid(); }
-        }
-
-        private void CheckPairConstraints(ScheduledItem scheduledItem, SchedulePlan plan, IEnumerable<ConstraintPartner> partners, bool updateConnected)
-        {
-            try
-            {
-                CheckPairConstraints(scheduledItem, plan, partners, updateConnected, null, null);
-            }
-            catch (ViolatorUpdateInvalid e)
-            {
-                // XXX this should never happen!!
-                throw new ApplicationException("Internal program error", e);
-            }
+            return newHardViolationsValue <= violator.HardViolationsValue && (newHardViolationsValue != violator.HardViolationsValue || newSoftViolationsValue <= violator.SoftViolationsValue);
         }
 
         /// <summary>
