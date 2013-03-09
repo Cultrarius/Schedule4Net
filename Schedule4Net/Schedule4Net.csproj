@@ -61,7 +61,6 @@
     <Compile Include="Constraint\AbstractSingleConstraint.cs" />
     <Compile Include="Constraint\ConstraintDecision.cs" />
     <Compile Include="Constraint\ConstraintPrediction.cs" />
-    <Compile Include="Constraint\Impl\DebugTestConstraint.cs" />
     <Compile Include="Constraint\Impl\DependenciesConstraint.cs" />
     <Compile Include="Constraint\Impl\NoOverlappingConstraint.cs" />
     <Compile Include="Constraint\Impl\StartNowConstraint.cs" />

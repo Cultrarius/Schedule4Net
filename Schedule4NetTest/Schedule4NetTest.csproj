@@ -51,6 +51,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="DebugTestConstraint.cs" />
     <Compile Include="HeuristicRepairSchedulingTest.cs" />
     <Compile Include="SwitchLaneTest.cs" />
     <Compile Include="ParallelHeuristicRepairSchedulingTest.cs" />
