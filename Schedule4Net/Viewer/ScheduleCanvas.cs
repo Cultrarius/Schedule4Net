@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -14,6 +15,7 @@ namespace Schedule4Net.Viewer
     {
         public double DurationScale = 1.0;
         public bool DisplayTimeMarkers = true;
+        public bool DisplayOptional = true;
         private const double MinTimeMarkerDistance = 20;
         private const double TopMargin = 15;
         private const double LeftMargin = 5;
@@ -24,6 +26,7 @@ namespace Schedule4Net.Viewer
         private IDictionary<ItemToSchedule, ISet<ViolationsManager.ConstraintPartner>> _constraintMap;
         private IDictionary<Rectangle, ScheduledItem> _itemTable;
         private IDictionary<ItemToSchedule, IList<Rectangle>> _rectangleTable;
+        private IList<Rectangle> _optionalDurationRectangles;
 
         private static readonly List<Brush> ConstraintColors = new List<Brush> { 
             Brushes.DarkOrange, 
@@ -55,6 +58,7 @@ namespace Schedule4Net.Viewer
         {
             _itemTable = new Dictionary<Rectangle, ScheduledItem>();
             _rectangleTable = new Dictionary<ItemToSchedule, IList<Rectangle>>();
+            _optionalDurationRectangles = new List<Rectangle>();
             _constraintMap = originalScheduler == null ? null : originalScheduler.ViolationsManager.ConstraintMap;
             _items = items;
             Children.Clear();
@@ -78,7 +82,7 @@ namespace Schedule4Net.Viewer
             foreach (int time in _times)
             {
                 // text on top
-                TextBlock textTop = new TextBlock { Text = time.ToString(CultureInfo.InvariantCulture), FontSize = 11, Foreground = Brushes.Silver};
+                TextBlock textTop = new TextBlock { Text = time.ToString(CultureInfo.InvariantCulture), FontSize = 11, Foreground = Brushes.Silver };
                 TextOptions.SetTextFormattingMode(textTop, TextFormattingMode.Display);
                 Children.Add(textTop);
                 SetLeft(textTop, 2 + 25 + time * DurationScale + LeftMargin);
@@ -176,9 +180,9 @@ namespace Schedule4Net.Viewer
             }
             else
             {
-                _rectangleTable.Add(scheduledItem.ItemToSchedule, new List<Rectangle> {r});
+                _rectangleTable.Add(scheduledItem.ItemToSchedule, new List<Rectangle> { r });
             }
-            
+
             r.MouseEnter += r_MouseEnter;
             r.MouseLeave += r_MouseLeave;
             Children.Add(r);
@@ -238,6 +242,14 @@ namespace Schedule4Net.Viewer
             foreach (ScheduledItem item in _items)
             {
                 _lanes.UnionWith(item.ItemToSchedule.Lanes);
+
+                if (!DisplayOptional) continue;
+                SwitchLaneItem switched = item.ItemToSchedule as SwitchLaneItem;
+                if (switched == null) continue;
+                foreach (var optionalDuration in switched.OptionalDurations)
+                {
+                    _lanes.UnionWith(optionalDuration.Keys);
+                }
             }
         }
 
@@ -258,6 +270,10 @@ namespace Schedule4Net.Viewer
             {
                 rectangle.Fill = Brushes.LightSteelBlue;
             }
+            foreach (var rectangle in _optionalDurationRectangles)
+            {
+                Children.Remove(rectangle);
+            }
         }
 
         private void r_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
@@ -270,7 +286,8 @@ namespace Schedule4Net.Viewer
             {
                 rect.Fill = Brushes.Chartreuse;
             }
-            
+            if (DisplayOptional) { AddOptionalDurationRectangles(_itemTable[r]); }
+
             foreach (ViolationsManager.ConstraintPartner partner in _constraintMap[item])
             {
                 foreach (Rectangle rect in _rectangleTable[partner.PartnerItem])
@@ -280,15 +297,55 @@ namespace Schedule4Net.Viewer
                     double offset = 0;
                     foreach (ItemPairConstraint constraint in partner.Constraints)
                     {
-                        var gradientStop = new GradientStop(((SolidColorBrush) GetColorForConstraint(constraint)).Color, offset);
+                        var gradientStop = new GradientStop(((SolidColorBrush)GetColorForConstraint(constraint)).Color, offset);
                         gradientCollection.Add(gradientStop);
                         offset++;
                     }
 
                     rect.Fill = new LinearGradientBrush(gradientCollection);
                 }
-                
+
             }
+        }
+
+        private void AddOptionalDurationRectangles(ScheduledItem item)
+        {
+            SwitchLaneItem switched = item.ItemToSchedule as SwitchLaneItem;
+            if (switched == null) return;
+            ISet<Lane> paintedLanes = new HashSet<Lane>(switched.Lanes);
+            foreach (var optionalDuration in switched.OptionalDurations)
+            {
+                foreach (var lane in optionalDuration.Keys)
+                {
+                    if (paintedLanes.Contains(lane)) continue;
+                    PaintOptionalRectangle(item.Start, item.Start + optionalDuration[lane], lane);
+                }
+            }
+        }
+
+        private void PaintOptionalRectangle(int start, int end, Lane lane)
+        {
+            int offset = _lanes.TakeWhile(l => !l.Equals(lane)).Sum(l => 50);
+            Rectangle r = new Rectangle
+            {
+                Height = 46,
+                Width = (end - start) * DurationScale,
+                Stroke = Brushes.DarkViolet,
+                RadiusX = 10,
+                RadiusY = 10,
+                SnapsToDevicePixels = true,
+                StrokeDashArray = new DoubleCollection { 4, 4 },
+                StrokeDashCap = PenLineCap.Round,
+                StrokeThickness = 2
+            };
+            _optionalDurationRectangles.Add(r);
+            Children.Add(r);
+            SetLeft(r, 2 + 25 + start * DurationScale + LeftMargin);
+            SetTop(r, offset + 2 + TopMargin);
+
+            Width = Math.Max(Width,
+                             50 + (2 + 25 + start * DurationScale + LeftMargin) +
+                             ((end - start) * DurationScale));
         }
 
         internal static Brush GetColorForConstraint(ItemPairConstraint constraint)

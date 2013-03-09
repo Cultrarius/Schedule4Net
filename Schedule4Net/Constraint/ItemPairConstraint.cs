@@ -16,6 +16,7 @@
 
         /// <summary>
         /// This method is used as an optimization by the scheduler to see if this constraint never has to check the specified pair of items (because they can never violate the constraint).
+        /// Note that this can also be a SwitchLaneItem that can have additional, optional durations.
         /// </summary>
         /// <param name="item1">The item1.</param>
         /// <param name="item2">The item2.</param>

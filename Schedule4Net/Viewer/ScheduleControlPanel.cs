@@ -59,9 +59,30 @@ namespace Schedule4Net.Viewer
             AddDurationSlider(mainStackPanel);
             AddSnapshotSelection(mainStackPanel);
             AddTimeMarkerCheckbox(mainStackPanel);
+            AddOptionalDurationCheckbox(mainStackPanel);
             AddConstraintDisplay(mainStackPanel);
 
             return mainStackPanel;
+        }
+
+        private void AddOptionalDurationCheckbox(Panel mainStackPanel)
+        {
+            var optionalDurationCheckbox = new CheckBox { Content = "Display optional durations", Margin = new Thickness(5), IsChecked = true };
+            optionalDurationCheckbox.Checked += OptionalDurationCheckboxOnChecked;
+            optionalDurationCheckbox.Unchecked += OptionalDurationCheckboxOnUnchecked;
+            mainStackPanel.Children.Add(optionalDurationCheckbox);
+        }
+
+        private void OptionalDurationCheckboxOnUnchecked(object sender, RoutedEventArgs routedEventArgs)
+        {
+            _scheduleCanvas.DisplayOptional = false;
+            DisplaySnapshot(_currentSnapshot);
+        }
+
+        private void OptionalDurationCheckboxOnChecked(object sender, RoutedEventArgs routedEventArgs)
+        {
+            _scheduleCanvas.DisplayOptional = true;
+            DisplaySnapshot(_currentSnapshot);
         }
 
         private void AddConstraintDisplay(Panel mainStackPanel)
