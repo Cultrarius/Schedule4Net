@@ -9,7 +9,7 @@ namespace Schedule4Net.Core
         public int HardViolationsValue { get; set; }
         public int SoftViolationsValue { get; set; }
         public ViolationsManager Manager { get; private set; }
-        public ScheduledItem ScheduledItem { get; private set; }
+        public ScheduledItem ScheduledItem { get; internal set; }
 
         protected internal Violator(ScheduledItem scheduledItem, ViolationsManager manager)
         {

@@ -146,7 +146,7 @@ namespace Schedule4Net.Core
         /// This method checks if the provided item can be rescheduled in the provided <see cref="SchedulePlan" />.
         /// This method is merely checking if such a rescheduling would be possible and what it would mean for the constriant violation values of the involved items.
         /// This method does not automatically reschedule the item if it is possible to do so.
-        /// It returns an items that contains all information necessary to efficiently reschedule the item and update all constraint ciolations accordingly.
+        /// It returns an items that contains all information necessary to efficiently reschedule the item and update all constraint violations accordingly.
         /// </summary>
         /// <param name="newItem">The new scheduled item to be checked against the given plan.</param>
         /// <param name="plan">The plan the item should be rescheduled in.</param>
@@ -166,7 +166,7 @@ namespace Schedule4Net.Core
                 return false;
             }
 
-            if (UsingPrediction)
+            if (UsingPrediction && !(itemToSchedule is SwitchLaneItem))
             {
                 Predictor.ConflictPrediction prediction = _predictor.PredictConflicts(newItem);
                 if (!CheckUpdateValid(violator, newValues.HardViolationsValue + prediction.GetDefinedHardConflictValue(), newValues.SoftViolationsValue))
@@ -175,10 +175,11 @@ namespace Schedule4Net.Core
                 }
             }
 
-            System.Collections.Generic.IList<PartnerUpdate> partnerUpdates;
-            if (ConstraintMap.ContainsKey(itemToSchedule))
+            System.Collections.Generic.IList<PartnerUpdate> partnerUpdates = new List<PartnerUpdate>(0);
+            ISet<ConstraintPartner> partners;
+            
+            if (ConstraintMap.TryGetValue(itemToSchedule, out partners))
             {
-                ISet<ConstraintPartner> partners = ConstraintMap[itemToSchedule];
                 partnerUpdates = new List<PartnerUpdate>(partners.Count);
 
                 foreach (ConstraintPartner partner in partners)
@@ -191,10 +192,6 @@ namespace Schedule4Net.Core
                     }
                     UpdatePartnerViolator(partnerUpdates, partner, partnerItem, newPartnerValues);
                 }
-            }
-            else
-            {
-                partnerUpdates = new List<PartnerUpdate>(0);
             }
 
             Violator updatedViolator = new Violator(newItem, newValues.HardViolationsValue, newValues.SoftViolationsValue, this);

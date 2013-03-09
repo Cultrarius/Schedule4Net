@@ -30,7 +30,26 @@ namespace Schedule4Net.Constraint.Impl
         public bool NeedsChecking(ItemToSchedule item1, ItemToSchedule item2)
         {
             ISet<Lane> lanes = new HashSet<Lane>(item1.Lanes);
-            lanes.IntersectWith(item2.Lanes);
+            var switchItem1 = item1 as SwitchLaneItem;
+            if (switchItem1 != null)
+            {
+                foreach (var optionalDuration in switchItem1.OptionalDurations)
+                {
+                    lanes.UnionWith(optionalDuration.Keys);
+                }
+            }
+
+            ISet<Lane> otherLanes = new HashSet<Lane>(item2.Lanes);
+            var switchItem2 = item2 as SwitchLaneItem;
+            if (switchItem2 != null)
+            {
+                foreach (var optionalDuration in switchItem2.OptionalDurations)
+                {
+                    otherLanes.UnionWith(optionalDuration.Keys);
+                }
+            }
+
+            lanes.IntersectWith(otherLanes); 
             return lanes.Count != 0;
         }
 

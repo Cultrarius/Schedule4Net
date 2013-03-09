@@ -174,6 +174,37 @@ namespace Schedule4Net
             }
         }
 
+        internal void ExchangeScheduledItem(ScheduledItem oldItem, ScheduledItem newItem)
+        {
+            int itemId = oldItem.ItemToSchedule.Id;
+            if (newItem.ItemToSchedule.Id != itemId)
+            {
+                throw new ArgumentException("Can only exchange for an item with the same id!");
+            }
+            if (!_scheduledItems.ContainsKey(itemId))
+            {
+                throw new ArgumentException("The plan does not contain this scheduled item!");
+            }
+            if (_fixedItems.Contains(oldItem))
+            {
+                throw new ArgumentException("The item " + oldItem + " has been fixated and must not be moved!");
+            }
+
+            Exchange(oldItem, newItem);
+        }
+
+        private void Exchange(ScheduledItem oldItem, ScheduledItem newItem)
+        {
+            int itemId = oldItem.ItemToSchedule.Id;
+            RemoveFromStartValues(oldItem);
+            AddToStartValues(newItem);
+
+            _scheduledItems.Remove(itemId);
+            _scheduledItems.Add(itemId, newItem);
+
+            UpdateMakespan();
+        }
+
         internal ScheduledItem MoveScheduledItem(ItemToSchedule itemToMove, int newStart)
         {
             int itemId = itemToMove.Id;
@@ -186,16 +217,9 @@ namespace Schedule4Net
             {
                 throw new ArgumentException("The item " + oldItem + " has been fixated and must not be moved!");
             }
+
             ScheduledItem newItem = oldItem.ChangeStart(newStart);
-
-            // update start values
-            RemoveFromStartValues(oldItem);
-            AddToStartValues(newItem);
-
-            _scheduledItems.Remove(itemId);
-            _scheduledItems.Add(itemId, newItem);
-
-            UpdateMakespan();
+            Exchange(oldItem, newItem);
 
             return newItem;
         }
@@ -306,6 +330,11 @@ namespace Schedule4Net
         public object Clone()
         {
             return new SchedulePlan(_scheduledItems, _startValues, _dependentItems, _fixedItems);
+        }
+
+        internal ScheduledItem ChangeDuration(SwitchLaneItem oldItem, SwitchLaneItem newItem, int start)
+        {
+            return null;
         }
     }
 }

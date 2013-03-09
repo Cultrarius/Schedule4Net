@@ -1,5 +1,5 @@
 ﻿using System;
-using Schedule4Net.Core.Exception;
+using System.Collections.Generic;
 
 namespace Schedule4Net.Core
 {
@@ -23,27 +23,55 @@ namespace Schedule4Net.Core
                 return false;
             }
 
+            //TODO: this move is totally unnecessary, it only wastes valuable time!
             ScheduledItem newItem = plan.MoveScheduledItem(violator.ScheduledItem.ItemToSchedule, start);
+
             ViolatorUpdate violatorUpdate;
             if (!_violationsManager.TryViolatorUpdate(newItem, plan, out violatorUpdate))
             {
                 // the update failed since the new item conflicts against more constraints than the reference
-                return false;
+                // if possible, try to switch the item to other lane(s)
+                var switchItem = violator.ScheduledItem.ItemToSchedule as SwitchLaneItem;
+                if (switchItem == null) { return false; }
+                return TryDurationSwitch(plan, start, switchItem);
             }
+            AddPossibleConfiguration(plan, violatorUpdate);
+            return true;
+        }
 
+        private bool TryDurationSwitch(SchedulePlan plan, int start, SwitchLaneItem switchItem)
+        {
+            bool switchedDurations = false;
+            var optionalDurations = switchItem.OptionalDurations;
+            foreach (IDictionary<Lane, int> optionalDuration in optionalDurations)
+            {
+                SwitchLaneItem switched = switchItem.SwitchDurations(optionalDuration);
+                ScheduledItem newItem = new ScheduledItem(switched, start);
+                ViolatorUpdate violatorUpdate;
+                if (!_violationsManager.TryViolatorUpdate(newItem, plan, out violatorUpdate)) continue;
+                AddPossibleConfiguration(plan, violatorUpdate);
+                switchedDurations = true;
+            }
+            return switchedDurations;
+        }
+
+        private void AddPossibleConfiguration(SchedulePlan plan, ViolatorUpdate violatorUpdate)
+        {
             int hardValue = violatorUpdate.UpdatedViolator.HardViolationsValue;
             int softValue = violatorUpdate.UpdatedViolator.SoftViolationsValue;
 
             int referenceHardValue = _referenceViolator.HardViolationsValue;
             if (referenceHardValue > hardValue || (referenceHardValue == hardValue && _referenceViolator.SoftViolationsValue > softValue))
             {
-                Configuration newConfiguration = new Configuration(violatorUpdate, plan.Makespan);
+                ScheduledItem updated = violatorUpdate.UpdatedViolator.ScheduledItem;
+                //TODO: the scheduleplan must calculate this, otherwise it will be a wrong result!
+                int newMakespan = Math.Max(plan.Makespan, updated.Start + updated.ItemToSchedule.MaxDuration);
+                var newConfiguration = new Configuration(violatorUpdate, newMakespan);
                 if (_bestConfiguration == null || newConfiguration.CompareTo(_bestConfiguration) == -1)
                 {
                     _bestConfiguration = newConfiguration;
                 }
             }
-            return true;
         }
 
         public bool ApplyBestConfiguration(SchedulePlan plan)
@@ -53,8 +81,9 @@ namespace Schedule4Net.Core
                 return false;
             }
 
-            ScheduledItem oldItem = _bestConfiguration.Violator.ScheduledItem;
-            plan.MoveScheduledItem(oldItem.ItemToSchedule, oldItem.Start);
+            ScheduledItem newItem = _bestConfiguration.Violator.ScheduledItem;
+            ScheduledItem oldItem = plan.GetScheduledItem(newItem.ItemToSchedule);
+            plan.ExchangeScheduledItem(oldItem, newItem);
             _violationsManager.UpdateViolator(_bestConfiguration.ViolatorUpdate);
 
             return true;
