@@ -24,7 +24,15 @@ namespace Schedule4Net.Core
             }
 
             //TODO: this move is totally unnecessary, it only wastes valuable time!
-            ScheduledItem newItem = plan.MoveScheduledItem(violator.ScheduledItem.ItemToSchedule, start);
+            ScheduledItem newItem;
+            if (violator.ScheduledItem.ItemToSchedule.MaxDuration + violator.ScheduledItem.Start == plan.Makespan)
+            {
+                newItem = plan.MoveScheduledItem(violator.ScheduledItem.ItemToSchedule, start);
+            }
+            else
+            {
+                newItem = new ScheduledItem(violator.ScheduledItem.ItemToSchedule, start);
+            }
 
             ViolatorUpdate violatorUpdate;
             if (!_violationsManager.TryViolatorUpdate(newItem, plan, out violatorUpdate))
