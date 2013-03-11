@@ -51,12 +51,20 @@ namespace Schedule4Net
         public bool ParllelScheduling { get; set; }
 
         /// <summary>
+        /// If <c>true</c> then the scheduler will document the steps of its work by taking "snapshots".
+        /// They can be retrieved via the <c>Snapshots</c>-property of the scheduler and represent the individual steps taken to create the schedule.
+        /// Setting this property to false might improve performance a little.
+        /// </summary>
+        public bool IsTakingSnapshots { get; set; }
+
+        /// <summary>
         /// Creates a new instance of the scheduler using the constraints of the given <see cref="Core.ViolationsManager"/>.
         /// </summary>
         /// <param name="manager">The manager holding the constraints used to create all future schedules.</param>
         internal Scheduler(ViolationsManager manager)
         {
             CachingResultPlan = true;
+            IsTakingSnapshots = true;
             ViolationsManager = manager;
             _configurationsManager = new ConfigurationsManager(ViolationsManager);
             _snapshots = new List<IList<ScheduledItem>>();
@@ -160,7 +168,7 @@ namespace Schedule4Net
                     _plan.Schedule(scheduledItem);
                 }
             }
-            _snapshots.Add(_plan.ScheduledItems);
+            if (IsTakingSnapshots) { _snapshots.Add(_plan.ScheduledItems); }
         }
 
         private void ScheduleCluster(ISet<ItemToSchedule> cluster)
@@ -278,7 +286,7 @@ namespace Schedule4Net
                     }
                 }
 
-                _snapshots.Add(_plan.ScheduledItems);
+                if (IsTakingSnapshots) { _snapshots.Add(_plan.ScheduledItems); }
                 violator = ViolationsManager.GetBiggestViolator(null);
                 if (violator == null || (!hardConstraintsSatisfied && violator.HardViolationsValue == 0))
                 {
@@ -567,8 +575,7 @@ namespace Schedule4Net
                 UpdateMaxLaneValues(maximumValues, scheduledItem);
             }
 
-            // take a snapshot
-            _snapshots.Add(_plan.ScheduledItems);
+            if (IsTakingSnapshots) { _snapshots.Add(_plan.ScheduledItems); }
         }
 
         private static void UpdateMaxLaneValues(IDictionary<Lane, int> maximumValues, ScheduledItem scheduledItem)
