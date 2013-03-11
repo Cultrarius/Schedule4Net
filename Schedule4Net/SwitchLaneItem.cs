@@ -4,6 +4,17 @@ using Schedule4Net.Constraint.Impl;
 
 namespace Schedule4Net
 {
+    /// <summary>
+    /// Like the <see cref="ItemToSchedule"/> this represents the entity that the scheduling algorithm has to create the schedule from.
+    /// However, where the normal <c>ItemToSchedule</c> is linked to a specific set of <see cref="Lane"/>s, this item also has optional lane durations.
+    /// The scheduler might at any point decide to switch the item to one of the provided optional durations.
+    /// For example, this can be used to model a workprocess that can run on one of several possible machines.
+    /// </summary>
+    /// <remarks>
+    /// Please note that the use of this item comes at the cost of increased scheduling complexity.
+    /// Also note that the scheduler will try the optional duration if, and only if, a rescheduling on the current lane is not possible.
+    /// So, as long as there is the possibility to stay on the current lane, the scheduler will not use the optional durations.
+    /// </remarks>
     [Serializable]
     public class SwitchLaneItem : ItemToSchedule
     {
@@ -31,12 +42,23 @@ namespace Schedule4Net
             _optionalDurations = optionalDurations;
         }
 
+        /// <summary>
+        /// Switches the currently active durations to one of the optional ones and returns the resulting item.
+        /// </summary>
+        /// <param name="newDurations">The new durations to switch to. This _must_ be one of the currently optional durations, otherwise an exception is thrown.</param>
+        /// <returns>The newly constructed item. The item that the method is invoked on cannot be changed since it is immutable.</returns>
+        /// <exception cref="System.ArgumentException">This exception is thrown if the given durations are not present in the optional durations of this item.</exception>
         public SwitchLaneItem SwitchDurations(IDictionary<Lane, int> newDurations)
         {
             IList<IDictionary<Lane, int>> newOptionalDurations = GetNewOptionalDurations(newDurations);
             return GetNewItemWithSwitchedDurations(new Dictionary<Lane, int>(newDurations), newOptionalDurations);
         }
 
+        /// <summary>
+        /// Subclasses should overwrite this method and provide a new object of their own class.
+        /// </summary>
+        /// <param name="newDurations">The new durations of the item.</param>
+        /// <param name="newOptionalDurations">The new optional durations of the item.</param>
         protected virtual SwitchLaneItem GetNewItemWithSwitchedDurations(IDictionary<Lane, int> newDurations, IList<IDictionary<Lane, int>> newOptionalDurations)
         {
             return new SwitchLaneItem(Id, newDurations, RequiredItems, newOptionalDurations);
