@@ -23,7 +23,6 @@ namespace Schedule4Net.Core
                 return false;
             }
 
-            //TODO: this move is totally unnecessary, it only wastes valuable time!
             ScheduledItem newItem;
             if (violator.ScheduledItem.ItemToSchedule.MaxDuration + violator.ScheduledItem.Start == plan.Makespan)
             {
