@@ -54,7 +54,7 @@ namespace Schedule4NetTest
                                                                    new List<ItemPairConstraint>());
 
             //manager = new ViolationsManager(singleConstraints, pairConstraints);
-            scheduling = new Scheduler(singleConstraints, pairConstraints) { ParllelScheduling = true };
+            scheduling = new Scheduler(singleConstraints, pairConstraints) { ParallelScheduling = true };
         }
 
         //
@@ -1189,7 +1189,7 @@ namespace Schedule4NetTest
             items.AddRange(CreateTestCluster(40, 2, 100));
 
             List<ItemPairConstraint> testPairConstraints = new List<ItemPairConstraint> { new DependenciesConstraint(), new NoOverlappingConstraint() };
-            scheduling = new Scheduler(singleConstraints, testPairConstraints) {ParllelScheduling = true};
+            scheduling = new Scheduler(singleConstraints, testPairConstraints) {ParallelScheduling = true};
             SchedulePlan result = scheduling.Schedule(items, fixedItems);
 
             Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
@@ -1208,7 +1208,7 @@ namespace Schedule4NetTest
             }
 
             List<ItemPairConstraint> testPairConstraints = new List<ItemPairConstraint> { new DependenciesConstraint(), new NoOverlappingConstraint() };
-            scheduling = new Scheduler(singleConstraints, testPairConstraints) { ParllelScheduling = true };
+            scheduling = new Scheduler(singleConstraints, testPairConstraints) { ParallelScheduling = true };
             SchedulePlan result = scheduling.Schedule(items, fixedItems);
 
             Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
@@ -1227,7 +1227,7 @@ namespace Schedule4NetTest
             }
 
             List<ItemPairConstraint> testPairConstraints = new List<ItemPairConstraint> { new DependenciesConstraint(), new NoOverlappingConstraint() };
-            scheduling = new Scheduler(singleConstraints, testPairConstraints) { ParllelScheduling = true };
+            scheduling = new Scheduler(singleConstraints, testPairConstraints) { ParallelScheduling = true };
 
             Stopwatch sw = new Stopwatch();
             sw.Start();

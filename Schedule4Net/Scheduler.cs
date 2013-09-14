@@ -48,7 +48,7 @@ namespace Schedule4Net
         /// Also note that the result may vary from non-parallel scheduling since the input-order of items is not preserved.
         /// Parallel scheduling also does not provide snapshots of the intermediate steps.
         /// </summary>
-        public bool ParllelScheduling { get; set; }
+        public bool ParallelScheduling { get; set; }
 
         /// <summary>
         /// If <c>true</c> then the scheduler will document the steps of its work by taking "snapshots".
@@ -123,7 +123,7 @@ namespace Schedule4Net
             CreateStartPlan(itemsToSchedule, fixedItems);
             if (itemsToSchedule.Count == 0) return _plan;
             ViolationsManager.Initialize(_plan);
-            if (ParllelScheduling)
+            if (ParallelScheduling)
             {
                 SchedulePlanInParallel();
             }
@@ -176,7 +176,7 @@ namespace Schedule4Net
             var scheduler = new Scheduler(ViolationsManager.SingleConstraints, ViolationsManager.PairConstraints)
                 {
                     CachingResultPlan = CachingResultPlan,
-                    ParllelScheduling = false,
+                    ParallelScheduling = false,
                     _plan = _plan // set the plan in case of caching
                 };
             var fixedCluster = new List<ScheduledItem>();

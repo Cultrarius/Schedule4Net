@@ -410,7 +410,7 @@ namespace Schedule4NetTest
             durations.Add(new Lane(3), 200);
             items.Add(new ItemToSchedule(22, durations, new List<ItemToSchedule>()));
 
-            scheduling.ParllelScheduling = false;
+            scheduling.ParallelScheduling = false;
             SchedulePlan result = scheduling.Schedule(items, fixedItems);
 
             Assert.AreEqual(items.Count + fixedItems.Count, result.ScheduledItems.Count);
