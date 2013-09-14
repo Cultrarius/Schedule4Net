@@ -10,7 +10,7 @@ using Schedule4Net.Core.Exception;
 namespace Schedule4NetTest
 {
     [TestClass]
-    public class PrallelHeuristicRepairSchedulingTest
+    public class ParllelHeuristicRepairSchedulingTest
     {
         private Scheduler scheduling;
         //private ViolationsManager manager;
