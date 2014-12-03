@@ -16,5 +16,10 @@ The easiest way to install the lib is to use the NuGet package manager: [Schedul
 
 Of course, you can also clone the source from github and compile the lib yourself.
 
+### Documentation
+
+Head over to the wiki where you can find a [Getting Started] guide as well as some more documentation.
+
 [Quartz.NET]:http://quartznet.sourceforge.net/
 [Schedule4Net on Nuget]:http://nuget.org/packages/Schedule4Net
+[Getting Started]:https://github.com/Cultrarius/Schedule4Net/wiki/Getting-started
