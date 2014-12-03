@@ -3,6 +3,8 @@ Schedule4Net
 
 This is a general scheduling framework able to create schedules using arbitrary constraints written in C#.
 
+![Logo](logo.png)
+
 ### What is Schedule4Net?
 It is a framework that allows a user to create a schedule from a given list of items and constraints. This does not sound spectacular, but it is an NP-hard problem. Schedule4Net tries to approximate a good solution by using a heuristic algorithm. Anyone interested can have a look at it here: http://cds.cern.ch/record/1463647
 
